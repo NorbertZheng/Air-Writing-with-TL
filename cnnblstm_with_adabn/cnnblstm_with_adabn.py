@@ -12,14 +12,20 @@ from lstm import LSTMHardSigmoid
 from AdaBN import AdaBN
 
 class cnnblstm_with_adabn(nn.Module):
+	PARAMS_FILE = "params.pkl"
+	NET1_ADABN = "net1_adabn"
+	NET2_ADABN = "net2_adabn"
+	NET3_ADABN = "net3_adabn"
 
-	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, params_file = "./params.pkl", use_cuda = 0):
+	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = 0, params_dir = "./params"):
 		super(cnnblstm_with_adabn, self).__init__()
 
 		self.time_steps = time_steps
 		self.n_features = n_features
 		self.n_outputs = n_outputs
-		self.params_file = params_file
+		self.params_dir = params_dir
+		if not os.path.exists(self.params_dir):
+			os.mkdir(self.params_dir)
 
 		self.n_filters = 128
 		self.n_hidden = 150
@@ -36,15 +42,15 @@ class cnnblstm_with_adabn(nn.Module):
 			nn.MaxPool1d(kernel_size = 2)
 		)
 
-		self.net1_adabn = AdaBN(self.n_filters)
+		self.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET1_ADABN))
 
 		# self.net2 = nn.LSTM(input_size = self.n_filters, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 		self.net2 = LSTMHardSigmoid(input_size = self.n_filters, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 
 		if self.bidirectional:
-			self.net2_adabn = AdaBN(self.n_hidden * 2)
+			self.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN))
 		else:
-			self.net2_adabn = AdaBN(self.n_hidden)
+			self.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN))
 
 		self.net3 = nn.Sequential(
 			nn.Linear(300, 50, bias = True),
@@ -52,7 +58,7 @@ class cnnblstm_with_adabn(nn.Module):
 			# nn.Sigmoid(),
 		)
 
-		self.net3_adabn = AdaBN(50)
+		self.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET3_ADABN))
 
 		self.net4 = nn.Sequential(
 			nn.Dropout(p = 0.2),
@@ -197,18 +203,30 @@ class cnnblstm_with_adabn(nn.Module):
 		print("Accuracy: ", str(accuracy))
 
 	def save_params(self):
-		torch.save(self.state_dict(), self.params_file)
+		self.save_adabn_variables()
+		torch.save(self.state_dict(), os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE))
 		print("save_params success!")
 
+	def save_adabn_variables(self):
+		self.net1_adabn.save_attrs()
+		self.net2_adabn.save_attrs()
+		self.net3_adabn.save_attrs()
+
 	def load_params(self):
-		if os.path.exists(self.params_file):
+		self.load_adabn_variables()
+		if os.path.exists(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE)):
 			if self.use_cuda == 0:
-				self.load_state_dict(torch.load(self.params_file, map_location = torch.device('cpu')))
+				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
 			else:
-				self.load_state_dict(torch.load(self.params_file, map_location = torch.device('cuda')))
+				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cuda')))
 			print("load_params success!")
 
-	def get_model(pre_trained = False):
+	def load_adabn_variables(self):
+		self.net1_adabn.load_attrs()
+		self.net2_adabn.load_attrs()
+		self.net3_adabn.load_attrs()
+
+	def get_model(self, pre_trained = False):
 		if pre_trained:
 			self.load_params()
 		return self

@@ -1,18 +1,29 @@
 from __future__ import division
 
+import os
+import pickle
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 from torch.autograd import Variable
 
 class AdaBN(nn.Module):
+	MU_J_FILE = "mu_j.pkl"
+	SIGMA_J_FILE = "sigma_j.pkl"
+	N_J_FILE = "n_j.pkl"
+	MU_J_NEXT_FILE = "mu_j_next.pkl"
+	SIGMA_J_NEXT_FILE = "sigma_j_next.pkl"
+	N_J_NEXT_FILE = "n_j_next.pkl"
 
-	def __init__(self, n_features, eps = 1e-5, affine = True):
+	def __init__(self, n_features, eps = 1e-5, affine = True, variables_dir = "./variables"):
 		super(AdaBN, self).__init__()
 
 		self.n_features = n_features
 		self.eps = eps
 		self.affine = affine
+		self.variables_dir = variables_dir
+		if not os.path.exists(self.variables_dir):
+			os.mkdir(self.variables_dir)
 
 		if self.affine:
 			self.weight = Parameter(torch.Tensor(self.n_features), requires_grad = True)
@@ -81,27 +92,39 @@ class AdaBN(nn.Module):
 		self.sigma_j_next = Variable(next[1])
 		self.n_j_next = Variable(next[2])
 
-	def load_attrs(self, attrs_dict):
-		if attrs_dict != None:
-			self.mu_j = attrs_dict["mu_j"]
-			self.sigma_j = attrs_dict["sigma_j"]
-			self.n_j = attrs_dict["n_j"]
-			self.mu_j_next = attrs_dict["mu_j_next"]
-			self.sigma_j_next = attrs_dict["sigma_j_next"]
-			self.n_j_next = attrs_dict["n_j_next"]
+	def _load_attr(self, path):
+		if os.path.exists(path):
+			with open(path, "rb") as f:
+				attr = pickle.load(f)
+		else:
+			attr = None
+		return attr
+
+	def load_attrs(self):
+		if os.path.exists(self.variables_dir):
+			self.mu_j = self._load_attr(os.path.join(self.variables_dir, AdaBN.MU_J_FILE))
+			self.sigma_j = self._load_attr(os.path.join(self.variables_dir, AdaBN.SIGMA_J_FILE))
+			self.n_j = self._load_attr(os.path.join(self.variables_dir, AdaBN.N_J_FILE))
+			self.mu_j_next = self._load_attr(os.path.join(self.variables_dir, AdaBN.MU_J_NEXT_FILE))
+			self.sigma_j_next = self._load_attr(os.path.join(self.variables_dir, AdaBN.SIGMA_J_NEXT_FILE))
+			self.n_j_next = self._load_attr(os.path.join(self.variables_dir, AdaBN.N_J_NEXT_FILE))
+			if ((self.mu_j == None) or (self.sigma_j == None) or (self.n_j == None) or (self.mu_j_next == None) or (self.sigma_j_next == None) or (self.n_j_next == None)):
+				self.reset_running_stats()
+				print("reset running stats!")
 			print("load attrs from dict successfully!")
 
-	def store_attrs(self):
-		attrs_dict = {}
-		attrs_dict["mu_j"] = self.mu_j
-		attrs_dict["sigma_j"] = self.sigma_j
-		attrs_dict["n_j"] = self.n_j
-		attrs_dict["mu_j_next"] = self.mu_j_next
-		attrs_dict["sigma_j_next"] = self.sigma_j_next
-		attrs_dict["n_j_next"] = self.n_j_next
-		print("store attrs into dict successfully!")
+	def _save_attr(self, path, attr):
+		with open(path, "wb") as f:
+			pickle.dump(attr, f)
 
-		return attrs_dict
+	def save_attrs(self):
+		self._save_attr(os.path.join(self.variables_dir, AdaBN.MU_J_FILE), self.mu_j)
+		self._save_attr(os.path.join(self.variables_dir, AdaBN.SIGMA_J_FILE), self.sigma_j)
+		self._save_attr(os.path.join(self.variables_dir, AdaBN.N_J_FILE), self.n_j)
+		self._save_attr(os.path.join(self.variables_dir, AdaBN.MU_J_NEXT_FILE), self.mu_j_next)
+		self._save_attr(os.path.join(self.variables_dir, AdaBN.SIGMA_J_NEXT_FILE), self.sigma_j_next)
+		self._save_attr(os.path.join(self.variables_dir, AdaBN.N_J_NEXT_FILE), self.n_j_next)
+		print("save attrs into pkl successfully!")
 
 def adaptive_batch_norm(input, gamma, beta, mu_j, sigma_j, n_j, is_training = True, eps = 1e-5, ):
 	if is_training:

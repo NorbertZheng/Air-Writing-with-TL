@@ -1,5 +1,7 @@
 # dir
 /__pycache__
+/params
+/transfer_params
 
 # file
 *.pkl
