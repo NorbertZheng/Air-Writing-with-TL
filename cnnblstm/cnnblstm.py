@@ -185,7 +185,7 @@ class cnnblstm(nn.Module):
 				self.load_state_dict(torch.load(self.params_file, map_location = torch.device('cuda')))
 			print("load_params success!")
 
-	def get_model(pre_trained = False):
+	def get_model(self, pre_trained = False):
 		if pre_trained:
 			self.load_params()
 		return self
