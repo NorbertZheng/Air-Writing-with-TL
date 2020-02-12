@@ -53,8 +53,9 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
-		# optimize all cnn parameters
-		optimizer = torch.optim.Adam(self.parameters(), lr = learning_rate)
+		# optimize all adabn parameters
+		params = [{"params": model.parameters()} for model in self.m_cnnblstm_with_adabn.children() if model in [self.m_cnnblstm_with_adabn.net1_adabn, self.m_cnnblstm_with_adabn.net2_adabn, self.m_cnnblstm_with_adabn.net3_adabn]]
+		optimizer = torch.optim.Adam(params, lr = learning_rate)
 		# the target label is not one-hotted
 		loss_func = nn.CrossEntropyLoss()
 
