@@ -20,7 +20,7 @@ class finetune(nn.Module):
 		self.n_outputs = n_outputs
 		self.use_cuda = use_cuda
 
-		cnn_blstm = cnnblstm(time_steps = time_steps, n_features = n_features, n_outputs = n_outputs, params_file = params_file, use_cuda = use_cuda).get_model(pre_trained = True)
+		cnn_blstm = cnnblstm(time_steps = time_steps, n_features = n_features, n_outputs = n_outputs, params_file = params_file, use_cuda = use_cuda).get_model(pre_trained = True).get_model(pretrained = True)
 		cnn_blstm.net3 = nn.Sequential()
 		self.features = cnn_blstm
 		if self.features.bidirectional:
