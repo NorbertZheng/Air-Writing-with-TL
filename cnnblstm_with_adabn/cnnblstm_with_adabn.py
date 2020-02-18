@@ -17,7 +17,7 @@ class cnnblstm_with_adabn(nn.Module):
 	NET2_ADABN = "net2_adabn"
 	NET3_ADABN = "net3_adabn"
 
-	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = 0, params_dir = "./params"):
+	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = False, params_dir = "./params"):
 		super(cnnblstm_with_adabn, self).__init__()
 
 		self.time_steps = time_steps
@@ -42,15 +42,15 @@ class cnnblstm_with_adabn(nn.Module):
 			nn.MaxPool1d(kernel_size = 2)
 		)
 
-		self.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET1_ADABN))
+		self.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET1_ADABN), use_cuda = self.use_cuda)
 
 		# self.net2 = nn.LSTM(input_size = self.n_filters, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 		self.net2 = LSTMHardSigmoid(input_size = self.n_filters, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 
 		if self.bidirectional:
-			self.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN))
+			self.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 		else:
-			self.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN))
+			self.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 
 		self.net3 = nn.Sequential(
 			nn.Linear(300, 50, bias = True),
@@ -58,7 +58,7 @@ class cnnblstm_with_adabn(nn.Module):
 			# nn.Sigmoid(),
 		)
 
-		self.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET3_ADABN))
+		self.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET3_ADABN), use_cuda = self.use_cuda)
 
 		self.net4 = nn.Sequential(
 			nn.Dropout(p = 0.2),
@@ -71,7 +71,7 @@ class cnnblstm_with_adabn(nn.Module):
 			n_layers = self.n_layers * 2
 		else:
 			n_layers = self.n_layers
-		if self.use_cuda == 1:
+		if self.use_cuda:
 			hidden_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
 			cell_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
 		else:
@@ -118,7 +118,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.net2_adabn.update_running_stats()
 		self.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
@@ -142,7 +142,7 @@ class cnnblstm_with_adabn(nn.Module):
 			train_acc = 0
 			for step, (b_x, b_y) in enumerate(train_loader):		# gives batch data
 				b_x = b_x.view(-1, self.n_features, self.time_steps)	# reshape x to (batch, n_features, time_step)
-				if self.use_cuda == 1:
+				if self.use_cuda:
 					b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
@@ -164,7 +164,8 @@ class cnnblstm_with_adabn(nn.Module):
 				optimizer.step()									# apply gradients
 
 				# print loss
-				print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+				if (step + 1) % 20 == 0:
+					print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
 
 			# save params
 			self.save_params()
@@ -182,7 +183,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.eval()
 
 		with torch.no_grad():
-			if self.use_cuda == 1:
+			if self.use_cuda:
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
@@ -215,10 +216,10 @@ class cnnblstm_with_adabn(nn.Module):
 	def load_params(self):
 		self.load_adabn_variables()
 		if os.path.exists(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE)):
-			if self.use_cuda == 0:
-				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
-			else:
+			if self.use_cuda:
 				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cuda')))
+			else:
+				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
 			print("load_params success!")
 
 	def load_adabn_variables(self):
@@ -234,9 +235,9 @@ class cnnblstm_with_adabn(nn.Module):
 if __name__ == '__main__':
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
-		cnnblstm = cnnblstm_with_adabn(use_cuda = 1).cuda()
+		cnnblstm = cnnblstm_with_adabn(use_cuda = use_cuda).cuda()
 	else:
-		cnnblstm = cnnblstm_with_adabn(use_cuda = 0)
+		cnnblstm = cnnblstm_with_adabn(use_cuda = use_cuda)
 	print(cnnblstm)
 	# get train_x, train_y
 	train_x = torch.rand(20, 3, 800, dtype = torch.float32)

@@ -15,7 +15,7 @@ class AdaBN(nn.Module):
 	SIGMA_J_NEXT_FILE = "sigma_j_next.pkl"
 	N_J_NEXT_FILE = "n_j_next.pkl"
 
-	def __init__(self, n_features, eps = 1e-5, affine = True, variables_dir = "./variables"):
+	def __init__(self, n_features, eps = 1e-5, affine = True, variables_dir = "./variables", use_cuda = False):
 		super(AdaBN, self).__init__()
 
 		self.n_features = n_features
@@ -24,6 +24,7 @@ class AdaBN(nn.Module):
 		self.variables_dir = variables_dir
 		if not os.path.exists(self.variables_dir):
 			os.mkdir(self.variables_dir)
+		self.use_cuda = use_cuda
 
 		if self.affine:
 			self.weight = Parameter(torch.Tensor(self.n_features), requires_grad = True)
@@ -96,6 +97,12 @@ class AdaBN(nn.Module):
 		if os.path.exists(path):
 			with open(path, "rb") as f:
 				attr = pickle.load(f)
+				'''
+				if self.use_cuda:
+					attr = torch.load(f, map_location = torch.device('cuda'))
+				else:
+					attr = torch.load(f, map_location = torch.device('cpu'))
+				'''
 		else:
 			attr = None
 		return attr
@@ -116,6 +123,7 @@ class AdaBN(nn.Module):
 	def _save_attr(self, path, attr):
 		with open(path, "wb") as f:
 			pickle.dump(attr, f)
+			# torch.save(attr, f)
 
 	def save_attrs(self):
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.MU_J_FILE), self.mu_j)

@@ -14,9 +14,10 @@ if __name__ == '__main__':
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
-		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = 1).cuda()
+		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = use_cuda).cuda()
 	else:
-		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = 0)
+		print(use_cuda)
+		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = use_cuda)
 	print(m_transfer_cnnblstm_with_adabn)
 	# get train_x, train_y
 	Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(TRAIN_PATH)

@@ -13,7 +13,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 	NET2_ADABN = "net2_adabn"
 	NET3_ADABN = "net3_adabn"
 
-	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = 0, params_dir = "./params", transfer_params_dir = "./transfer_params"):
+	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = False, params_dir = "./params", transfer_params_dir = "./transfer_params"):
 		super(transfer_cnnblstm_with_adabn, self).__init__()
 
 		self.transfer_params_dir = transfer_params_dir
@@ -30,12 +30,12 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.bidirectional = True
 
 		self.m_cnnblstm_with_adabn = cnnblstm_with_adabn(time_steps = self.time_steps, n_features = self.n_features, n_outputs = self.n_outputs, use_cuda = self.use_cuda, params_dir = params_dir).get_model(pre_trained = True)
-		self.m_cnnblstm_with_adabn.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN))
+		self.m_cnnblstm_with_adabn.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN), use_cuda = self.use_cuda)
 		if self.bidirectional:
-			self.m_cnnblstm_with_adabn.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN))
+			self.m_cnnblstm_with_adabn.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 		else:
-			self.m_cnnblstm_with_adabn.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN))
-		self.m_cnnblstm_with_adabn.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN))
+			self.m_cnnblstm_with_adabn.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
+		self.m_cnnblstm_with_adabn.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN), use_cuda = self.use_cuda)
 
 	def forward(self, input):
 		return self.m_cnnblstm_with_adabn(input)
@@ -75,7 +75,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 			train_acc = 0
 			for step, (b_x, b_y) in enumerate(train_loader):		# gives batch data
 				b_x = b_x.view(-1, self.n_features, self.time_steps)	# reshape x to (batch, n_features, time_step)
-				if self.use_cuda == 1:
+				if self.use_cuda:
 					b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
@@ -115,7 +115,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.eval()
 
 		with torch.no_grad():
-			if self.use_cuda == 1:
+			if self.use_cuda:
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
@@ -127,9 +127,9 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		output = self(test_x)
 		print(output)
 		prediction = torch.max(output, 1)[1]
-		pred_y = prediction.data.numpy()
+		pred_y = prediction.cpu().data.numpy()
 		print(pred_y)
-		target_y = test_y.numpy()
+		target_y = test_y.cpu().data.numpy()
 		print(test_y)
 
 		accuracy = float((pred_y == target_y).astype(int).sum()) / float(target_y.size)
@@ -148,10 +148,10 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 	def load_params(self):
 		self.load_adabn_variables()
 		if os.path.exists(os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE)):
-			if self.use_cuda == 0:
-				self.load_state_dict(torch.load(os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
-			else:
+			if self.use_cuda:
 				self.load_state_dict(torch.load(os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cuda')))
+			else:
+				self.load_state_dict(torch.load(os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
 			print("load_params success!")
 
 	def load_adabn_variables(self):
@@ -167,9 +167,9 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 if __name__ == '__main__':
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
-		cnnblstm = transfer_cnnblstm_with_adabn(use_cuda = 1).cuda()
+		cnnblstm = transfer_cnnblstm_with_adabn(use_cuda = use_cuda).cuda()
 	else:
-		cnnblstm = transfer_cnnblstm_with_adabn(use_cuda = 0)
+		cnnblstm = transfer_cnnblstm_with_adabn(use_cuda = use_cuda)
 	print(cnnblstm)
 	# get train_x, train_y
 	train_x = torch.rand(20, 3, 800, dtype = torch.float32)
