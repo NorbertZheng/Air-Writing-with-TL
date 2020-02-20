@@ -12,7 +12,7 @@ from lstm import LSTMHardSigmoid
 
 class cnnblstm(nn.Module):
 
-	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, params_file = "./params.pkl", use_cuda = 0):
+	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, params_file = "./params.pkl", use_cuda = False):
 		super(cnnblstm, self).__init__()
 
 		self.time_steps = time_steps
@@ -52,7 +52,7 @@ class cnnblstm(nn.Module):
 			n_layers = self.n_layers * 2
 		else:
 			n_layers = self.n_layers
-		if self.use_cuda == 1:
+		if self.use_cuda:
 			hidden_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
 			cell_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
 		else:
@@ -116,7 +116,7 @@ class cnnblstm(nn.Module):
 			train_acc = 0
 			for step, (b_x, b_y) in enumerate(train_loader):		# gives batch data
 				b_x = b_x.view(-1, self.n_features, self.time_steps)	# reshape x to (batch, n_features, time_step)
-				if self.use_cuda == 1:
+				if self.use_cuda:
 					b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
@@ -155,7 +155,7 @@ class cnnblstm(nn.Module):
 		self.eval()
 
 		with torch.no_grad():
-			if self.use_cuda == 1:
+			if self.use_cuda:
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
@@ -179,10 +179,10 @@ class cnnblstm(nn.Module):
 
 	def load_params(self):
 		if os.path.exists(self.params_file):
-			if self.use_cuda == 0:
-				self.load_state_dict(torch.load(self.params_file, map_location = torch.device('cpu')))
-			else:
+			if self.use_cuda:
 				self.load_state_dict(torch.load(self.params_file, map_location = torch.device('cuda')))
+			else:
+				self.load_state_dict(torch.load(self.params_file, map_location = torch.device('cpu')))
 			print("load_params success!")
 
 	def get_model(self, pre_trained = False):
@@ -193,9 +193,9 @@ class cnnblstm(nn.Module):
 if __name__ == '__main__':
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
-		cnnblstm = cnnblstm(use_cuda = 1).cuda()
+		cnnblstm = cnnblstm(use_cuda = use_cuda).cuda()
 	else:
-		cnnblstm = cnnblstm(use_cuda = 0)
+		cnnblstm = cnnblstm(use_cuda = use_cuda)
 	print(cnnblstm)
 	# get train_x, train_y
 	train_x = torch.rand(20, 3, 800, dtype = torch.float32)
