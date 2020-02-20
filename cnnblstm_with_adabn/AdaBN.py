@@ -96,13 +96,11 @@ class AdaBN(nn.Module):
 	def _load_attr(self, path):
 		if os.path.exists(path):
 			with open(path, "rb") as f:
-				attr = pickle.load(f)
-				'''
+				# attr = pickle.load(f)
 				if self.use_cuda:
 					attr = torch.load(f, map_location = torch.device('cuda'))
 				else:
 					attr = torch.load(f, map_location = torch.device('cpu'))
-				'''
 		else:
 			attr = None
 		return attr
@@ -122,8 +120,8 @@ class AdaBN(nn.Module):
 
 	def _save_attr(self, path, attr):
 		with open(path, "wb") as f:
-			pickle.dump(attr, f)
-			# torch.save(attr, f)
+			# pickle.dump(attr, f)
+			torch.save(attr, f)
 
 	def save_attrs(self):
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.MU_J_FILE), self.mu_j)
