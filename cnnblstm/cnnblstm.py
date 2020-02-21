@@ -165,9 +165,9 @@ class cnnblstm(nn.Module):
 		output = self(test_x)
 		print(output)
 		prediction = torch.max(output, 1)[1]
-		pred_y = prediction.data.numpy()
+		pred_y = prediction.cpu().data.numpy()
 		print(pred_y)
-		target_y = test_y.numpy()
+		target_y = test_y.cpu().data.numpy()
 		print(test_y)
 
 		accuracy = float((pred_y == target_y).astype(int).sum()) / float(target_y.size)
