@@ -26,6 +26,7 @@ class cnnblstm(nn.Module):
 
 		self.use_cuda = use_cuda
 
+		# build net1 features.cnn
 		self.net1 = nn.Sequential(
 			nn.Conv1d(in_channels = self.n_features, out_channels = 128, kernel_size = 15),
 			nn.ReLU(),
@@ -34,9 +35,11 @@ class cnnblstm(nn.Module):
 			nn.MaxPool1d(kernel_size = 2)
 		)
 
+		# build net2 features.blstm
 		# self.net2 = nn.LSTM(input_size = 128, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 		self.net2 = LSTMHardSigmoid(input_size = 128, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 
+		# build net3 classifier(fc->fc)
 		self.net3 = nn.Sequential(
 			# nn.Tanh(),
 			nn.Linear(300, 50, bias = True),
@@ -48,6 +51,9 @@ class cnnblstm(nn.Module):
 		)
 
 	def init_hidden(self, batch_size):
+		"""
+		init blstm's hidden states
+		"""
 		if self.bidirectional:
 			n_layers = self.n_layers * 2
 		else:
@@ -75,6 +81,9 @@ class cnnblstm(nn.Module):
 			nn.init.constant(t, 0)
 
 	def forward(self, input):
+		"""
+		compute the output of input according to the entire network model
+		"""
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
 		maxPool1d_t_output = maxPool1d_output.permute(0, 2, 1).contiguous()
@@ -93,6 +102,9 @@ class cnnblstm(nn.Module):
 		return linear2_softmax_output
 
 	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
+		"""
+		train all layers of network model
+		"""
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
@@ -145,6 +157,9 @@ class cnnblstm(nn.Module):
 		print("train finish!")
 
 	def getTestAccuracy(self, test_x, test_y):
+		"""
+		test network model with test set
+		"""
 		# init params
 		self.init_weights()
 
@@ -174,10 +189,16 @@ class cnnblstm(nn.Module):
 		print("Accuracy: ", str(accuracy))
 
 	def save_params(self):
+		"""
+		save params
+		"""
 		torch.save(self.state_dict(), self.params_file)
 		print("save_params success!")
 
 	def load_params(self):
+		"""
+		load params
+		"""
 		if os.path.exists(self.params_file):
 			if self.use_cuda:
 				self.load_state_dict(torch.load(self.params_file, map_location = torch.device('cuda')))
@@ -186,6 +207,9 @@ class cnnblstm(nn.Module):
 			print("load_params success!")
 
 	def get_model(self, pre_trained = False):
+		"""
+		get pretrained model
+		"""
 		if pre_trained:
 			self.load_params()
 		return self
