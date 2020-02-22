@@ -34,6 +34,7 @@ class cnnblstm_with_adabn(nn.Module):
 
 		self.use_cuda = use_cuda
 
+		# build net1 cnn
 		self.net1 = nn.Sequential(
 			nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters, kernel_size = 15),
 			nn.ReLU(),
@@ -42,24 +43,30 @@ class cnnblstm_with_adabn(nn.Module):
 			nn.MaxPool1d(kernel_size = 2)
 		)
 
+		# build net1_adabn
 		self.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET1_ADABN), use_cuda = self.use_cuda)
 
+		# build net2 blstm
 		# self.net2 = nn.LSTM(input_size = self.n_filters, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 		self.net2 = LSTMHardSigmoid(input_size = self.n_filters, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 
+		# build net2_adabn
 		if self.bidirectional:
 			self.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 		else:
 			self.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 
+		# build net3 fc
 		self.net3 = nn.Sequential(
 			nn.Linear(300, 50, bias = True),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 		)
 
+		# build net3_adabn
 		self.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET3_ADABN), use_cuda = self.use_cuda)
 
+		# build net4 fc
 		self.net4 = nn.Sequential(
 			nn.Dropout(p = 0.2),
 			nn.Linear(50, self.n_outputs, bias = True),
@@ -67,6 +74,9 @@ class cnnblstm_with_adabn(nn.Module):
 		)
 
 	def init_hidden(self, batch_size):
+		"""
+		init blstm's hidden states
+		"""
 		if self.bidirectional:
 			n_layers = self.n_layers * 2
 		else:
@@ -81,6 +91,7 @@ class cnnblstm_with_adabn(nn.Module):
 
 	def init_weights(self):
 		"""
+		temp useless
 		Here we reproduce Keras default initialization weights for consistency with Keras version
 		"""
 		ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
@@ -94,6 +105,9 @@ class cnnblstm_with_adabn(nn.Module):
 			nn.init.constant_(t, 0)
 
 	def forward(self, input):
+		"""
+		compute the output of input according to the entire network model
+		"""
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
 		# maxPool1d_adabn_output = maxPool1d_output
@@ -114,11 +128,17 @@ class cnnblstm_with_adabn(nn.Module):
 		return linear2_softmax_output
 
 	def update_adabn_running_stats(self):
+		"""
+		update adabn running states, update mu_j with mu_j_next to start next round
+		"""
 		self.net1_adabn.update_running_stats()
 		self.net2_adabn.update_running_stats()
 		self.net3_adabn.update_running_stats()
 
 	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
+		"""
+		train all layers of network model
+		"""
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
@@ -173,6 +193,9 @@ class cnnblstm_with_adabn(nn.Module):
 		print("train finish!")
 
 	def getTestAccuracy(self, test_x, test_y):
+		"""
+		test network model with test set
+		"""
 		# init params
 		self.init_weights()
 
@@ -204,16 +227,25 @@ class cnnblstm_with_adabn(nn.Module):
 		print("Accuracy: ", str(accuracy))
 
 	def save_params(self):
+		"""
+		save params & adabn's inner stats
+		"""
 		self.save_adabn_variables()
 		torch.save(self.state_dict(), os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE))
 		print("save_params success!")
 
 	def save_adabn_variables(self):
+		"""
+		save adabn's inner stats
+		"""
 		self.net1_adabn.save_attrs()
 		self.net2_adabn.save_attrs()
 		self.net3_adabn.save_attrs()
 
 	def load_params(self):
+		"""
+		load params & adabn's inner stats
+		"""
 		self.load_adabn_variables()
 		if os.path.exists(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE)):
 			if self.use_cuda:
@@ -223,11 +255,17 @@ class cnnblstm_with_adabn(nn.Module):
 			print("load_params success!")
 
 	def load_adabn_variables(self):
+		"""
+		load adabn's inner stats
+		"""
 		self.net1_adabn.load_attrs()
 		self.net2_adabn.load_attrs()
 		self.net3_adabn.load_attrs()
 
 	def get_model(self, pre_trained = False):
+		"""
+		get pretrained model
+		"""
 		if pre_trained:
 			self.load_params()
 		return self

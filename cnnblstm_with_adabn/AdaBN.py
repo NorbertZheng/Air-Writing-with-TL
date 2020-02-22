@@ -26,12 +26,14 @@ class AdaBN(nn.Module):
 			os.mkdir(self.variables_dir)
 		self.use_cuda = use_cuda
 
+		# define parameters
 		if self.affine:
 			self.weight = Parameter(torch.Tensor(self.n_features), requires_grad = True)
 			self.bias = Parameter(torch.Tensor(self.n_features), requires_grad = True)
 		else:
 			self.weight = torch.ones(self.n_features, dtype = torch.float32)
 			self.bais = torch.zeros(self.n_features, dtype = torch.float32)
+		# define inner stats
 		self.mu_j = Variable(torch.zeros(self.n_features, dtype = torch.float32))
 		self.sigma_j = Variable(torch.ones(self.n_features, dtype = torch.float32))
 		self.n_j = Variable(torch.zeros(1, dtype = torch.long))
@@ -39,9 +41,13 @@ class AdaBN(nn.Module):
 		self.sigma_j_next = Variable(torch.ones(self.n_features, dtype = torch.float32))
 		self.n_j_next = Variable(torch.zeros(1, dtype = torch.long))
 
+		# reset parameters & inner stats
 		self.reset_parameters()
 
 	def reset_parameters(self):
+		"""
+		reset paramsters & inner stats
+		"""
 		self.reset_running_stats()
 		if self.affine:
 			nn.init.uniform_(self.weight)
@@ -51,6 +57,9 @@ class AdaBN(nn.Module):
 			nn.init.zeros_(self.bias)
 
 	def reset_running_stats(self):
+		"""
+		reset inner stats
+		"""
 		self.mu_j = Variable(torch.zeros(self.n_features, dtype = torch.float32))
 		self.sigma_j = Variable(torch.ones(self.n_features, dtype = torch.float32))
 		self.n_j = Variable(torch.zeros(1, dtype = torch.long))
@@ -59,16 +68,17 @@ class AdaBN(nn.Module):
 		self.n_j_next = Variable(torch.zeros(1, dtype = torch.long))
 
 	def update_running_stats(self):
-		'''
-		self.mu_j.data.scatter_(dim = 0, index = torch.zeros(self.n_features).type(torch.long), src = self.mu_j_next.data)
-		self.sigma_j.data.scatter_(dim = 0, index = torch.zeros(self.n_features).type(torch.long), src = self.sigma_j_next.data)
-		self.n_j.data.scatter_(dim = 0, index = torch.zeros(1).type(torch.long), src = self.n_j_next.data)
-		'''
+		"""
+		update inner stats to start next round
+		"""
 		self.mu_j = self.mu_j_next
 		self.sigma_j = self.sigma_j_next
-		self.n_j = self.n_j_next		
+		self.n_j = self.n_j_next
 
 	def set_running_stats(self, mu_j, sigma_j, n_j, mu_j_next, sigma_j_next, n_j_next):
+		"""
+		set inner stats
+		"""
 		self.mu_j = Variable(mu_j)
 		self.sigma_j = Variable(sigma_j)
 		self.n_j = Variable(n_j)
@@ -77,6 +87,9 @@ class AdaBN(nn.Module):
 		self.n_j_next = Variable(n_j_next)
 
 	def forward(self, input):
+		"""
+		compute the output of input according to the entire AdaBN network model
+		"""
 		assert len(input.shape) in (2, 3, 4)
 		if input.device.type != "cpu":
 			self.mu_j = self.mu_j.cuda()
@@ -88,12 +101,18 @@ class AdaBN(nn.Module):
 		return output
 
 	def update_next_stats(self, next):
+		"""
+		set stats_next with new pointer
+		"""
 		assert len(next) == 3
 		self.mu_j_next = Variable(next[0])
 		self.sigma_j_next = Variable(next[1])
 		self.n_j_next = Variable(next[2])
 
 	def _load_attr(self, path):
+		"""
+		_load inner stats
+		"""
 		if os.path.exists(path):
 			with open(path, "rb") as f:
 				# attr = pickle.load(f)
@@ -106,6 +125,9 @@ class AdaBN(nn.Module):
 		return attr
 
 	def load_attrs(self):
+		"""
+		load all inner stats
+		"""
 		if os.path.exists(self.variables_dir):
 			self.mu_j = self._load_attr(os.path.join(self.variables_dir, AdaBN.MU_J_FILE))
 			self.sigma_j = self._load_attr(os.path.join(self.variables_dir, AdaBN.SIGMA_J_FILE))
@@ -119,11 +141,17 @@ class AdaBN(nn.Module):
 			print("load attrs from dict successfully!")
 
 	def _save_attr(self, path, attr):
+		"""
+		_save inner stats
+		"""
 		with open(path, "wb") as f:
 			# pickle.dump(attr, f)
 			torch.save(attr, f)
 
 	def save_attrs(self):
+		"""
+		save all inner stats
+		"""
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.MU_J_FILE), self.mu_j)
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.SIGMA_J_FILE), self.sigma_j)
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.N_J_FILE), self.n_j)
@@ -133,11 +161,17 @@ class AdaBN(nn.Module):
 		print("save attrs into pkl successfully!")
 
 def adaptive_batch_norm(input, gamma, beta, mu_j, sigma_j, n_j, is_training = True, eps = 1e-5, ):
+	"""
+	compute adabn
+	"""
 	if is_training:
 		_varify_batch_size(input.size())
 	return _adaptive_batch_norm(input, gamma, beta, mu_j, sigma_j, n_j, is_training = is_training, eps = eps)
 
 def _varify_batch_size(size):
+	"""
+	verify batch size is available
+	"""
 	size_prods = size[0]
 	for i in range(len(size) - 2):
 		size_prods *= size[i + 2]
@@ -145,6 +179,9 @@ def _varify_batch_size(size):
 		raise ValueError("Expected more than 1 vaule per channel when training, got input size {}".format(size))
 
 def _adaptive_batch_norm(input, gamma, beta, mu_j_src, sigma_j_src, n_j_src, is_training = True, eps = 1e-5, ):
+	"""
+	help compute adabn
+	"""
 	if len(input.shape) == 2:
 		# adabn_1d
 		shape_1d = (1, input.shape[1])
