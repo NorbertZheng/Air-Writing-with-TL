@@ -20,9 +20,12 @@ class finetune(nn.Module):
 		self.n_outputs = n_outputs
 		self.use_cuda = use_cuda
 
+		# get pretrained cnnblstm model
 		cnn_blstm = cnnblstm(time_steps = time_steps, n_features = n_features, n_outputs = n_outputs, params_file = params_file, use_cuda = use_cuda).get_model(pre_trained = True).get_model(pretrained = True)
+		# set cnnblstm's net3(classifier) with None
 		cnn_blstm.net3 = nn.Sequential()
 		self.features = cnn_blstm
+		# rebuild finetune's classifier
 		if self.features.bidirectional:
 			n_feature_inputs = self.features.n_hidden * 2
 		else:
@@ -38,6 +41,9 @@ class finetune(nn.Module):
 		)
 
 	def forward(self, input):
+		"""
+		compute the output of input according to the entire network model
+		"""
 		# get features
 		features_output = self.features(input)
 		features_output = features_output.view(features_output.size(0), -1)
@@ -61,6 +67,9 @@ class finetune(nn.Module):
 			nn.init.constant(t, 0)
 
 	def trainPartialLayers(self, train_data, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
+		"""
+		train classifier layers of network model
+		"""
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
@@ -114,6 +123,9 @@ class finetune(nn.Module):
 		print("train finish!")
 
 	def getTestAccuracy(self, test_x, test_y):
+		"""
+		test network model with test set
+		"""
 		# init params
 		self.init_partial_weights()
 
@@ -137,19 +149,25 @@ class finetune(nn.Module):
 		if self.use_cuda == 1:
 			prediction = prediction.cpu()
 			test_y = test_y.cpu()
-		pred_y = prediction.data.numpy()
+		pred_y = prediction.cpu().data.numpy()
 		print(pred_y)
-		target_y = test_y.numpy()
+		target_y = test_y.cpu().data.numpy()
 		print(test_y)
 
 		accuracy = float((pred_y == target_y).astype(int).sum()) / float(target_y.size)
 		print("Accuracy: ", str(accuracy))
 
 	def save_params(self):
+		"""
+		save params
+		"""
 		torch.save(self.state_dict(), self.finetune_params_file)
 		print("save_params success!")
 
 	def load_params(self):
+		"""
+		load params
+		"""
 		if os.path.exists(self.finetune_params_file):
 			if self.use_cuda == 0:
 				self.load_state_dict(torch.load(self.finetune_params_file, map_location = torch.device('cpu')))
