@@ -21,12 +21,20 @@ if __name__ == '__main__':
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
 	X_all, y_all = tools_6dmg.preprocess(TRAIN_PATH)
-	train_x = torch.from_numpy(X_all)
-	train_y = torch.from_numpy(y_all)
+	if use_cuda:
+		train_x = torch.from_numpy(X_all).cuda()
+		train_y = torch.from_numpy(y_all).cuda()
+	else:
+		train_x = torch.from_numpy(X_all)
+		train_y = torch.from_numpy(y_all)
 	# get test_x, test_y
 	X_all, y_all = tools_6dmg.preprocess(TEST_PATH)
-	test_x = torch.from_numpy(X_all)
-	test_y = torch.from_numpy(y_all)
+	if use_cuda:
+		test_x = torch.from_numpy(X_all).cuda()
+		test_y = torch.from_numpy(y_all).cuda()
+	else:
+		test_x = torch.from_numpy(X_all)
+		test_y = torch.from_numpy(y_all)
 	# trainAllLayers
 	m_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, test_x)
 	# get test accuracy
