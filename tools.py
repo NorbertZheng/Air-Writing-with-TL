@@ -115,3 +115,11 @@ def transferData(Y, segments, n_files, seq_length, maxlen = 800):
 		X_all_T[i] = X_all[i].T
 	return (X_all_T, y_all, seq_length)
 
+def z_score(x, axis = 0):
+	x = np.array(x).astype(float)
+	xr = np.rollaxis(x, axis = axis)
+	xr -= np.mean(x, axis = axis)
+	xr /= np.std(x, axis = axis)
+	# print(x)
+	return x
+

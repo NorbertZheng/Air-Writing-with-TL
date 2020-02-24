@@ -2,6 +2,7 @@ import torch
 # local class
 import sys
 sys.path.append("..")
+import tools
 import tools_6dmg
 sys.path.append("../network")
 import Coral
@@ -23,8 +24,12 @@ if __name__ == '__main__':
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
 	train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH)
+	# z_score
+	print(tools.z_score(train_x))
 	# get test_x, test_y
 	test_x, test_y = tools_6dmg.preprocess(TEST_PATH)
+	# z_score
+	print(tools.z_score(test_x))
 	# if enable_CORAL
 	if enable_CORAL:
 		# record old size
