@@ -32,10 +32,16 @@ if __name__ == '__main__':
 		assert len(old_train_x_size) == 3
 		old_test_x_size = test_x.shape
 		assert len(old_test_x_size) == 3
+		# for test
+		print(train_x)
+		print(test_x)
 		# resize train_x & test_x
 		train_x = train_x.resize((old_train_x_size[0], old_train_x_size[1] * old_train_x_size[2]))
 		test_x = test_x.resize((old_test_x_size[0], old_test_x_size[1] * old_test_x_size[2]))
-		# get 
+		# for test
+		print(train_x)
+		print(test_x)
+		# get train_x_new
 		train_x = Coral.CORAL_np(train_x, test_x)
 		# resize train_x & test_x
 		train_x = train_x.resize((old_train_x_size[0], old_train_x_size[1], old_train_x_size[2]))
