@@ -150,7 +150,7 @@ class cnnblstm_with_adabn(nn.Module):
 			train_x = train_x.view(-1, self.time_steps * self.n_features)
 			test_x = test_x.view(-1, self.time_steps * self.n_features)
 			# get CORAL(train_x, test_x)
-			train_x = Coral.CORAL(train_x, test_x)
+			train_x = Coral.CORAL_torch(train_x, test_x)
 		# review train_x & test_x
 		train_x = train_x.view(-1, self.n_features, self.time_steps)
 		test_x = test_x.view(-1, self.n_features, self.time_steps)

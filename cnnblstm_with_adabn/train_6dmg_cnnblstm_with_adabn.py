@@ -3,6 +3,8 @@ import torch
 import sys
 sys.path.append("..")
 import tools_6dmg
+sys.path.append("../nextwork")
+import Coral
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 
 enable_CORAL = True
@@ -21,14 +23,31 @@ if __name__ == '__main__':
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
 	X_all, y_all = tools_6dmg.preprocess(TRAIN_PATH)
+	# get test_x, test_y
+	X_all, y_all = tools_6dmg.preprocess(TEST_PATH)
+	# if enable_CORAL
+	if enable_CORAL:
+		# record old size
+		old_train_x_size = train_x.shape
+		assert len(old_train_x_size) == 3
+		old_test_x_size = test_x.shape
+		assert len(old_test_x_size) == 3
+		# resize train_x & test_x
+		train_x = train_x.resize((old_train_x_size[0], old_train_x_size[1] * old_train_x_size[2]))
+		test_x = test_x.resize((old_test_x_size[0], old_test_x_size[1] * old_test_x_size[2]))
+		# get 
+		train_x = Coral.CORAL_np(train_x, test_x)
+		# resize train_x & test_x
+		train_x = train_x.resize((old_train_x_size[0], old_train_x_size[1], old_train_x_size[2]))
+		test_x = test_x.resize((old_test_x_size[0], old_test_x_size[1], old_test_x_size[2]))
+	# init as tensor
 	if use_cuda:
 		train_x = torch.from_numpy(X_all).cuda()
 		train_y = torch.from_numpy(y_all).cuda()
 	else:
 		train_x = torch.from_numpy(X_all)
 		train_y = torch.from_numpy(y_all)
-	# get test_x, test_y
-	X_all, y_all = tools_6dmg.preprocess(TEST_PATH)
+	# init as tensor
 	if use_cuda:
 		test_x = torch.from_numpy(X_all).cuda()
 		test_y = torch.from_numpy(y_all).cuda()
