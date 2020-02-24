@@ -3,7 +3,7 @@ import torch
 import sys
 sys.path.append("..")
 import tools_6dmg
-sys.path.append("../nextwork")
+sys.path.append("../network")
 import Coral
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 
