@@ -29,6 +29,8 @@ def CORAL_np(Xs, Xt):
 	:return: New source domain features
 	'''
 	# get domain covariance
+	print(np.linalg.eig(np.cov(Xs.T)))
+	print(np.linalg.eig(np.cov(Xt.T)))
 	cov_src = np.cov(Xs.T) + np.eye(Xs.shape[1])
 	cov_tar = np.cov(Xt.T) + np.eye(Xt.shape[1])
 
