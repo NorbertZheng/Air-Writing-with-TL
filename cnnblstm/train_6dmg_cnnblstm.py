@@ -23,9 +23,8 @@ if __name__ == '__main__':
 	print(X_all.shape, y_all.shape)
 	train_x = torch.from_numpy(X_all)
 	train_y = torch.from_numpy(y_all)
-	train_data = torch.utils.data.TensorDataset(train_x, train_y)
 	# trainAllLayers
-	cnnblstm.trainAllLayers(train_data)
+	cnnblstm.trainAllLayers(train_x, train_y)
 	# get test_x, test_y
 	X_all, y_all = tools_6dmg.preprocess(TEST_PATH)
 	test_x = torch.from_numpy(X_all)

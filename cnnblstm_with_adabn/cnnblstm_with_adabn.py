@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 # local model
 import sys
 sys.path.append("../network")
+import Coral
 from lstm import LSTMHardSigmoid
 from AdaBN import AdaBN
 
@@ -17,22 +18,23 @@ class cnnblstm_with_adabn(nn.Module):
 	NET2_ADABN = "net2_adabn"
 	NET3_ADABN = "net3_adabn"
 
-	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = False, params_dir = "./params"):
+	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = False, params_dir = "./params", enable_CORAL = False):
 		super(cnnblstm_with_adabn, self).__init__()
 
 		self.time_steps = time_steps
 		self.n_features = n_features
 		self.n_outputs = n_outputs
+		self.use_cuda = use_cuda
 		self.params_dir = params_dir
 		if not os.path.exists(self.params_dir):
 			os.mkdir(self.params_dir)
+		self.enable_CORAL = enable_CORAL
 
 		self.n_filters = 128
 		self.n_hidden = 150
 		self.n_layers = 1
 		self.bidirectional = True
 
-		self.use_cuda = use_cuda
 
 		# build net1 cnn
 		self.net1 = nn.Sequential(
@@ -135,10 +137,18 @@ class cnnblstm_with_adabn(nn.Module):
 		self.net2_adabn.update_running_stats()
 		self.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""
+		# CORAL
+		if self.enable_CORAL:
+			if test_x == None:
+				print("ERROR: (in cnnblstm_with_adabn.trainAllLayers) test_x == None!")
+				return
+			train_x = Coral.CORAL(train_x, test_x)
+		# get train_data
+		train_data = torch.utils.data.TensorDataset(train_x, train_y)
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
