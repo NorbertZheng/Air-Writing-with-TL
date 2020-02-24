@@ -1,6 +1,10 @@
 # dir
 /__pycache__
+/params
+/transfer_params
+/params_transferdataset
 
 # file
 *.pkl
+*.out
 
