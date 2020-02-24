@@ -41,8 +41,8 @@ def CORAL_np(Xs, Xt):
 	print(np.linalg.eig(np.cov(Xt.T))[0].dtype)
 	for i in range(Xt_eig[0].shape[0]):
 		print(Xt_eig[0][i])
-	cov_src = np.cov(Xs.T) + np.eye(Xs.shape[1])
-	cov_tar = np.cov(Xt.T) + np.eye(Xt.shape[1])
+	cov_src = np.cov(Xs.T) + 2 * np.eye(Xs.shape[1])
+	cov_tar = np.cov(Xt.T) + 2 * np.eye(Xt.shape[1])
 
 	# compute Xs_new
 	A_coral = np.dot(scipy.linalg.fractional_matrix_power(cov_src, -0.5), scipy.linalg.fractional_matrix_power(cov_tar, 0.5))
