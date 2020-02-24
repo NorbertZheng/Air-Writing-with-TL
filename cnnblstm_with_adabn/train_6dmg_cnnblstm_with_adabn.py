@@ -36,16 +36,16 @@ if __name__ == '__main__':
 		print(train_x)
 		print(test_x)
 		# resize train_x & test_x
-		train_x = train_x.resize((old_train_x_size[0], old_train_x_size[1] * old_train_x_size[2]))
-		test_x = test_x.resize((old_test_x_size[0], old_test_x_size[1] * old_test_x_size[2]))
+		train_x.resize((old_train_x_size[0], old_train_x_size[1] * old_train_x_size[2]))
+		test_x.resize((old_test_x_size[0], old_test_x_size[1] * old_test_x_size[2]))
 		# for test
 		print(train_x)
 		print(test_x)
 		# get train_x_new
 		train_x = Coral.CORAL_np(train_x, test_x)
 		# resize train_x & test_x
-		train_x = train_x.resize((old_train_x_size[0], old_train_x_size[1], old_train_x_size[2]))
-		test_x = test_x.resize((old_test_x_size[0], old_test_x_size[1], old_test_x_size[2]))
+		train_x.resize((old_train_x_size[0], old_train_x_size[1], old_train_x_size[2]))
+		test_x.resize((old_test_x_size[0], old_test_x_size[1], old_test_x_size[2]))
 	# init as tensor
 	if use_cuda:
 		train_x = torch.from_numpy(train_x).cuda()
