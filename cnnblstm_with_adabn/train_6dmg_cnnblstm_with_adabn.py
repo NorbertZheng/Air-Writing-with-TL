@@ -2,7 +2,7 @@ import torch
 # local class
 import sys
 sys.path.append("..")
-import tools
+import tools_6dmg
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 
 TRAIN_PATH = r"../dataset/train_6dmg"
