@@ -35,6 +35,7 @@ if __name__ == '__main__':
 	else:
 		test_x = torch.from_numpy(X_all)
 		test_y = torch.from_numpy(y_all)
+	print(train_x.size(), test_x.size())
 	# trainAllLayers
 	m_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, test_x)
 	# get test accuracy
