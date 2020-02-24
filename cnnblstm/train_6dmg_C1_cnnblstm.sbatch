@@ -1,0 +1,1 @@
+python train_6dmg_C1_cnnblstm.py
