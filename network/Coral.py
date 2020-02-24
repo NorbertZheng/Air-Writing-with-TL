@@ -31,10 +31,16 @@ def CORAL_np(Xs, Xt):
 	# get domain covariance
 	print(np.cov(Xs.T).dtype)
 	print(np.cov(Xt.T).dtype)
+	Xs_eig = np.linalg.eig(np.cov(Xs.T))
 	print(np.linalg.eig(np.cov(Xs.T)))
 	print(np.linalg.eig(np.cov(Xs.T))[0].dtype)
+	for i in range(Xs_eig[0].shape[0]):
+		print(Xs_eig[0][i])
+	Xt_eig = np.linalg.eig(np.cov(Xt.T))
 	print(np.linalg.eig(np.cov(Xt.T)))
 	print(np.linalg.eig(np.cov(Xt.T))[0].dtype)
+	for i in range(Xt_eig[0].shape[0]):
+		print(Xt_eig[0][i])
 	cov_src = np.cov(Xs.T) + np.eye(Xs.shape[1])
 	cov_tar = np.cov(Xt.T) + np.eye(Xt.shape[1])
 
