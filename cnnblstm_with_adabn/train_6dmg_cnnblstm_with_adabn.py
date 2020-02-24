@@ -22,9 +22,9 @@ if __name__ == '__main__':
 		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = 0, params_dir = "./params_6dmg", enable_CORAL = enable_CORAL)
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
-	X_all, y_all = tools_6dmg.preprocess(TRAIN_PATH)
+	train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH)
 	# get test_x, test_y
-	X_all, y_all = tools_6dmg.preprocess(TEST_PATH)
+	test_x, test_y = tools_6dmg.preprocess(TEST_PATH)
 	# if enable_CORAL
 	if enable_CORAL:
 		# record old size
@@ -42,18 +42,18 @@ if __name__ == '__main__':
 		test_x = test_x.resize((old_test_x_size[0], old_test_x_size[1], old_test_x_size[2]))
 	# init as tensor
 	if use_cuda:
-		train_x = torch.from_numpy(X_all).cuda()
-		train_y = torch.from_numpy(y_all).cuda()
+		train_x = torch.from_numpy(train_x).cuda()
+		train_y = torch.from_numpy(train_y).cuda()
 	else:
-		train_x = torch.from_numpy(X_all)
-		train_y = torch.from_numpy(y_all)
+		train_x = torch.from_numpy(train_x)
+		train_y = torch.from_numpy(train_y)
 	# init as tensor
 	if use_cuda:
-		test_x = torch.from_numpy(X_all).cuda()
-		test_y = torch.from_numpy(y_all).cuda()
+		test_x = torch.from_numpy(test_x).cuda()
+		test_y = torch.from_numpy(test_y).cuda()
 	else:
-		test_x = torch.from_numpy(X_all)
-		test_y = torch.from_numpy(y_all)
+		test_x = torch.from_numpy(test_x)
+		test_y = torch.from_numpy(test_y)
 	print(train_x.size(), test_x.size())
 	# trainAllLayers
 	m_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, test_x)
