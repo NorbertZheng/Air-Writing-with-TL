@@ -30,12 +30,18 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.bidirectional = True
 
 		self.m_cnnblstm_with_adabn = cnnblstm_with_adabn(time_steps = self.time_steps, n_features = self.n_features, n_outputs = self.n_outputs, use_cuda = self.use_cuda, params_dir = params_dir).get_model(pre_trained = True)
+		# re-initial all adabn layers
+		"""
 		self.m_cnnblstm_with_adabn.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN), use_cuda = self.use_cuda)
 		if self.bidirectional:
 			self.m_cnnblstm_with_adabn.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 		else:
 			self.m_cnnblstm_with_adabn.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 		self.m_cnnblstm_with_adabn.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN), use_cuda = self.use_cuda)
+		"""
+		self.m_cnnblstm_with_adabn.net1_adabn.variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN)
+		self.m_cnnblstm_with_adabn.net2_adabn.variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN)
+		self.m_cnnblstm_with_adabn.net3_adabn.variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN)
 
 	def forward(self, input):
 		return self.m_cnnblstm_with_adabn(input)
