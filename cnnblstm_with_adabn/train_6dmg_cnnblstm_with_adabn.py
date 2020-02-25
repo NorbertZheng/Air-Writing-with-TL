@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 # local class
 import sys
 sys.path.append("..")
@@ -24,12 +25,8 @@ if __name__ == '__main__':
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
 	train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH)
-	# z_score
-	print(tools.z_score(train_x))
 	# get test_x, test_y
 	test_x, test_y = tools_6dmg.preprocess(TEST_PATH)
-	# z_score
-	print(tools.z_score(test_x))
 	# if enable_CORAL
 	if enable_CORAL:
 		# record old size
@@ -38,16 +35,16 @@ if __name__ == '__main__':
 		old_test_x_size = test_x.shape
 		assert len(old_test_x_size) == 3
 		# for test
-		print(train_x)
-		print(test_x)
+		# print(train_x)
+		# print(test_x)
 		# resize train_x & test_x
 		train_x.resize((old_train_x_size[0], old_train_x_size[1] * old_train_x_size[2]))
 		test_x.resize((old_test_x_size[0], old_test_x_size[1] * old_test_x_size[2]))
 		# for test
-		print(train_x)
-		print(test_x)
+		# print(train_x)
+		# print(test_x)
 		# get train_x_new
-		train_x = Coral.CORAL_np(train_x, test_x)
+		train_x = Coral.CORAL_np(train_x, test_x).astype(np.float32)
 		# resize train_x & test_x
 		train_x.resize((old_train_x_size[0], old_train_x_size[1], old_train_x_size[2]))
 		test_x.resize((old_test_x_size[0], old_test_x_size[1], old_test_x_size[2]))
