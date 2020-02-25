@@ -10,7 +10,8 @@ import Coral
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 
 enable_CORAL = True
-TRAIN_PATH = r"../dataset/train_6dmg"
+# TRAIN_PATH = r"../dataset/train_6dmg"
+TRAIN_PATH = r"../dataset/train"
 TEST_PATH = r"../dataset/test_6dmg"
 
 if __name__ == '__main__':
@@ -44,7 +45,7 @@ if __name__ == '__main__':
 		# print(train_x)
 		# print(test_x)
 		# get train_x_new
-		train_x = Coral.CORAL_np(train_x, test_x).astype(np.float32)
+		train_x = Coral.CORAL_np(train_x, test_x)
 		# resize train_x & test_x
 		train_x.resize((old_train_x_size[0], old_train_x_size[1], old_train_x_size[2]))
 		test_x.resize((old_test_x_size[0], old_test_x_size[1], old_test_x_size[2]))
