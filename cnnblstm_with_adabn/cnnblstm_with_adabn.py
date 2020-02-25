@@ -151,9 +151,8 @@ class cnnblstm_with_adabn(nn.Module):
 			test_x = test_x.view(-1, self.time_steps * self.n_features)
 			# get CORAL(train_x, test_x)
 			train_x = Coral.CORAL_torch(train_x, test_x)
-		# review train_x & test_x
+		# review train_x
 		train_x = train_x.view(-1, self.n_features, self.time_steps)
-		test_x = test_x.view(-1, self.n_features, self.time_steps)
 		# get train_data
 		train_data = torch.utils.data.TensorDataset(train_x, train_y)
 		# Data Loader for easy mini-batch return in training
