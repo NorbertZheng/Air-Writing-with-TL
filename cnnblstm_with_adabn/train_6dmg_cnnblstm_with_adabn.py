@@ -25,7 +25,9 @@ if __name__ == '__main__':
 		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = 0, params_dir = "./params_6dmg", enable_CORAL = enable_CORAL)
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
-	train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH)
+	# train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH)
+	Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(TRAIN_PATH)
+	train_x, train_y, _ = tools.transferData(Y, segments, n_files, seq_length)
 	# get test_x, test_y
 	test_x, test_y = tools_6dmg.preprocess(TEST_PATH)
 	# if enable_CORAL
