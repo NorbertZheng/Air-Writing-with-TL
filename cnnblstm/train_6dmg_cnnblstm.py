@@ -18,15 +18,18 @@ if __name__ == '__main__':
 	else:
 		cnnblstm = cnnblstm(params_file = "./params_6dmg.pkl", use_cuda = use_cuda)
 	print(cnnblstm)
+	# get TRAIN_PATH_SYS & TEST_PATH_SYS
+	TRAIN_PATH_SYS = sys.argv[1]
+	TEST_PATH_SYS = sys.argv[2]
 	# get train_x, train_y
-	X_all, y_all = tools_6dmg.preprocess(TRAIN_PATH)
+	X_all, y_all = tools_6dmg.preprocess(TRAIN_PATH_SYS)
 	print(X_all.shape, y_all.shape)
 	train_x = torch.from_numpy(X_all)
 	train_y = torch.from_numpy(y_all)
 	# trainAllLayers
 	cnnblstm.trainAllLayers(train_x, train_y)
 	# get test_x, test_y
-	X_all, y_all = tools_6dmg.preprocess(TEST_PATH)
+	X_all, y_all = tools_6dmg.preprocess(TEST_PATH_SYS)
 	test_x = torch.from_numpy(X_all)
 	test_y = torch.from_numpy(y_all)
 	# get test accuracy
