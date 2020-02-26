@@ -3,6 +3,10 @@ import csv
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+# local class
+import sys
+sys.path.append("../network")
+import PCA
 
 def getAllData(path, if_quiet = 0):
 	n_files = 0
@@ -114,6 +118,29 @@ def transferData(Y, segments, n_files, seq_length, maxlen = 800):
 	for i in range(X_all.shape[0]):
 		X_all_T[i] = X_all[i].T
 	return (X_all_T, y_all, seq_length)
+
+def allZeroIndex(Xs_item):
+	for i in range(Xs_item.shape[0]):
+		flag = 0
+		for j in range(Xs_item.shape[1]):
+			if Xs_item[i, j] != 0:
+				flag = 1
+				break
+		if flag == 0:		# all zeros
+			return i
+	return Xs_item.shape[0]
+
+def PCA_Xs(Xs):
+	pca = PCA.PCA(target_dimension = 3)
+	Xs_new = []
+	for i in range(Xs.shape[0]):
+		tail = allZeroIndex(Xs[i])
+		Xsi_new = pca.process(Xs[i])
+		Xsi_new = np.pad(Xsi_new, ((0, Xs[i].shape[0] - tail), (0, 0)), "constant", constant_values = (0, 0))
+		print(Xsi_new.shape)
+		Xs_new.append(Xsi_new)
+	Xs_new = np.array(Xs_new)
+	return Xs_new
 
 def z_score(x, axis = 0):
 	x = np.array(x).astype(float)
