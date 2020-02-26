@@ -9,10 +9,10 @@ sys.path.append("../network")
 import Coral
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 
-enable_CORAL = True
+enable_CORAL = False
 # TRAIN_PATH = r"../dataset/train_6dmg"
-TRAIN_PATH = r"../dataset/train"
-TEST_PATH = r"../dataset/test_6dmg"
+# TRAIN_PATH = r"../dataset/train"
+# TEST_PATH = r"../dataset/test_6dmg"
 
 if __name__ == '__main__':
 	torch.manual_seed(2)
@@ -26,10 +26,16 @@ if __name__ == '__main__':
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
 	# train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH)
+	TRAIN_PATH_SYS = sys.argv[1]
+	train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH_SYS)
+	"""
 	Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(TRAIN_PATH)
 	train_x, train_y, _ = tools.transferData(Y, segments, n_files, seq_length)
+	"""
 	# get test_x, test_y
-	test_x, test_y = tools_6dmg.preprocess(TEST_PATH)
+	# test_x, test_y = tools_6dmg.preprocess(TEST_PATH)
+	TEST_PATH_SYS = sys.argv[2]
+	test_x, test_y = tools_6dmg.preprocess(TEST_PATH_SYS)
 	# if enable_CORAL
 	if enable_CORAL:
 		# record old size
