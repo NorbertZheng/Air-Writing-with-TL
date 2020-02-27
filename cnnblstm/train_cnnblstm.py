@@ -29,9 +29,8 @@ if __name__ == '__main__':
 		X_all, y_all, _ = tools.transferData(Y, segments, n_files, seq_length)
 		train_x = torch.from_numpy(X_all)
 		train_y = torch.from_numpy(y_all)
-		train_data = torch.utils.data.TensorDataset(train_x, train_y)
 		# trainAllLayers
-		cnnblstm.trainAllLayers(train_data)
+		cnnblstm.trainAllLayers(train_x, train_y)
 	elif (CMD == "test"):
 		# get test_x, test_y
 		Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(PATH_SYS)
