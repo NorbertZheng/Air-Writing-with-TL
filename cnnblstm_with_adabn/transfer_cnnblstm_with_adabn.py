@@ -56,15 +56,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net2_adabn.update_running_stats()
 		self.m_cnnblstm_with_adabn.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
-		# Data Loader for easy mini-batch return in training
-		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
-		# optimize all adabn parameters
-		params = [{"params": model.parameters()} for model in self.m_cnnblstm_with_adabn.children() if model in [self.m_cnnblstm_with_adabn.net1_adabn, self.m_cnnblstm_with_adabn.net2_adabn, self.m_cnnblstm_with_adabn.net3_adabn]]
-		optimizer = torch.optim.Adam(params, lr = learning_rate)
-		# the target label is not one-hotted
-		loss_func = nn.CrossEntropyLoss()
-
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
 		# init params
 		self.init_partial_weights()
 
@@ -74,41 +66,69 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		# set train mode True
 		self.train()
 
-		# training and testing
-		for epoch in range(n_epoches):
-			# init loss & acc
-			train_loss = 0
-			train_acc = 0
-			for step, (b_x, b_y) in enumerate(train_loader):		# gives batch data
-				b_x = b_x.view(-1, self.n_features, self.time_steps)	# reshape x to (batch, n_features, time_step)
+		# unsespected data flow
+		if test_x != None:
+			print("unsespected data flow begin!")
+			with torch.no_grad():
 				if self.use_cuda:
-					b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
+					test_x = Variable(test_x).cuda()
 				else:
-					b_x, b_y = Variable(b_x), Variable(b_y)
+					test_x = Variable(test_x)
+			for epoch in range(n_epoches):
 				# get hidden
-				self.m_cnnblstm_with_adabn.init_hidden(b_x.size(0))
+				self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0))
 				# update adabn running stats
 				self.update_adabn_running_stats()
 				# get output
-				output = self(b_x)									# CNN_BLSTM output
-				# get loss
-				loss = loss_func(output, b_y)						# cross entropy loss
-				train_loss += loss.item() * len(b_y)
-				_, pre = torch.max(output, 1)
-				num_acc = (pre == b_y).sum()
-				train_acc += num_acc.item()
-				# backward
-				optimizer.zero_grad()								# clear gradients for this training step
-				loss.backward()										# backpropagation, compute gradients
-				optimizer.step()									# apply gradients
+				output = self(test_x)
 
-				# print loss
-				print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+		if train_x != None:
+			print("train start!")
+			# get train_data
+			train_data = torch.utils.data.TensorDataset(train_x, train_y)
+			# Data Loader for easy mini-batch return in training
+			train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
+			# optimize all adabn parameters
+			params = [{"params": model.parameters()} for model in self.m_cnnblstm_with_adabn.children() if model in [self.m_cnnblstm_with_adabn.net1_adabn, self.m_cnnblstm_with_adabn.net2_adabn, self.m_cnnblstm_with_adabn.net3_adabn]]
+			optimizer = torch.optim.Adam(params, lr = learning_rate)
+			# the target label is not one-hotted
+			loss_func = nn.CrossEntropyLoss()
 
-			# save params
-			self.save_params()
+			# training and testing
+			for epoch in range(n_epoches):
+				# init loss & acc
+				train_loss = 0
+				train_acc = 0
+				for step, (b_x, b_y) in enumerate(train_loader):		# gives batch data
+					b_x = b_x.view(-1, self.n_features, self.time_steps)	# reshape x to (batch, n_features, time_step)
+					if self.use_cuda:
+						b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
+					else:
+						b_x, b_y = Variable(b_x), Variable(b_y)
+					# get hidden
+					self.m_cnnblstm_with_adabn.init_hidden(b_x.size(0))
+					# update adabn running stats
+					self.update_adabn_running_stats()
+					# get output
+					output = self(b_x)									# CNN_BLSTM output
+					# get loss
+					loss = loss_func(output, b_y)						# cross entropy loss
+					train_loss += loss.item() * len(b_y)
+					_, pre = torch.max(output, 1)
+					num_acc = (pre == b_y).sum()
+					train_acc += num_acc.item()
+					# backward
+					optimizer.zero_grad()								# clear gradients for this training step
+					loss.backward()										# backpropagation, compute gradients
+					optimizer.step()									# apply gradients
 
-		print("train finish!")
+					# print loss
+					print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+
+				# save params
+				self.save_params()
+
+			print("train finish!")
 
 	def getTestAccuracy(self, test_x, test_y):
 		# init params
