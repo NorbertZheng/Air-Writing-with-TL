@@ -40,8 +40,16 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net3_adabn = AdaBN(50, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN), use_cuda = self.use_cuda)
 		"""
 		self.m_cnnblstm_with_adabn.net1_adabn.variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN)
+		if not os.path.exists(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN)):
+			os.mkdir(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN))
 		self.m_cnnblstm_with_adabn.net2_adabn.variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN)
+		if not os.path.exists(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN)):
+			os.mkdir(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET2_ADABN))
 		self.m_cnnblstm_with_adabn.net3_adabn.variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN)
+		if not os.path.exists(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN)):
+			os.mkdir(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN))
+		# save params
+		self.save_params()
 
 	def forward(self, input):
 		return self.m_cnnblstm_with_adabn(input)
@@ -56,9 +64,9 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net2_adabn.update_running_stats()
 		self.m_cnnblstm_with_adabn.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 10, batch_size = 10, shuffle = True):
 		# init params
-		self.init_partial_weights()
+		# self.init_partial_weights()
 
 		# load params
 		self.load_params()
@@ -132,7 +140,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 
 	def getTestAccuracy(self, test_x, test_y):
 		# init params
-		self.init_partial_weights()
+		# self.init_partial_weights()
 
 		# load params
 		self.load_params()
