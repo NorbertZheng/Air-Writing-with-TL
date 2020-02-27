@@ -6,7 +6,7 @@ sys.path.append("..")
 import tools
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 
-enable_PCA = True
+# enable_PCA = True
 # TRAIN_PATH = r"../dataset/train"
 # TEST_PATH = r"../dataset/test"
 
@@ -17,6 +17,7 @@ if __name__ == '__main__':
 	CMD = sys.argv[1]
 	PATH_SYS = sys.argv[2]
 	PARAMS_PATH_SYS = sys.argv[3]
+	enable_PCA = (sys.argv[4] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
