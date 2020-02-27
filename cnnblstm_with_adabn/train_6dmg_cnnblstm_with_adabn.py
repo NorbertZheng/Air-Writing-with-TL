@@ -14,6 +14,11 @@ enable_CORAL = False
 # TRAIN_PATH = r"../dataset/train"
 # TEST_PATH = r"../dataset/test_6dmg"
 
+"""
+usage:
+	python train_6dmg_cnnblstm_with_adabn.py train_path test_path
+"""
+
 if __name__ == '__main__':
 	torch.manual_seed(2)
 

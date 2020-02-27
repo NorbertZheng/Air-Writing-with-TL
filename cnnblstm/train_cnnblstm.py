@@ -9,6 +9,11 @@ from cnnblstm import cnnblstm
 # TRAIN_PATH = r"../dataset/train"
 # TEST_PATH = r"../dataset/test"
 
+"""
+usage:
+	python train_cnnblstm.py cmd path params_pkl
+"""
+
 if __name__ == '__main__':
 	torch.manual_seed(2)
 

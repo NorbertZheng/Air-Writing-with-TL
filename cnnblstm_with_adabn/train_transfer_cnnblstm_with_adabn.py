@@ -9,6 +9,11 @@ from transfer_cnnblstm_with_adabn import transfer_cnnblstm_with_adabn
 # N_TRAINSET = 0
 # TRANSFER_PATH = r"../dataset/transfer"
 
+"""
+usage:
+	python train_transfer_cnnblstm_with_adabn.py transfer_path n_trainset n_testset transfer_params_dir
+"""
+
 if __name__ == '__main__':
 	torch.manual_seed(2)
 

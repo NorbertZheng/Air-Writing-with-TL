@@ -8,6 +8,11 @@ from cnnblstm import cnnblstm
 TRAIN_PATH = r"../dataset/train_6dmg"
 TEST_PATH = r"../dataset/test_6dmg"
 
+"""
+usage:
+	python train_6dmg_cnnblstm.py cmd path
+"""
+
 if __name__ == '__main__':
 	torch.manual_seed(2)
 
