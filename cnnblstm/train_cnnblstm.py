@@ -19,9 +19,9 @@ if __name__ == '__main__':
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
-		cnnblstm = cnnblstm(use_cuda = use_cuda, params_dir = PARAMS_PATH_SYS).cuda()
+		cnnblstm = cnnblstm(use_cuda = use_cuda, params_file = PARAMS_PATH_SYS).cuda()
 	else:
-		cnnblstm = cnnblstm(use_cuda = use_cuda, params_dir = PARAMS_PATH_SYS)
+		cnnblstm = cnnblstm(use_cuda = use_cuda, params_file = PARAMS_PATH_SYS)
 	print(cnnblstm)
 	if (CMD == "train"):
 		# get train_x, train_y
