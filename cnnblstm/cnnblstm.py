@@ -101,10 +101,12 @@ class cnnblstm(nn.Module):
 
 		return linear2_softmax_output
 
-	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""
+		# get train_data
+		train_data = torch.utils.data.TensorDataset(train_x, train_y)
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
