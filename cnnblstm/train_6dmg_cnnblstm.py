@@ -2,6 +2,7 @@ import torch
 # local class
 import sys
 sys.path.append("..")
+import tools
 import tools_6dmg
 from cnnblstm import cnnblstm
 
@@ -19,6 +20,7 @@ if __name__ == '__main__':
 	# get TRAIN_PATH_SYS & TEST_PATH_SYS
 	CMD = sys.argv[1]
 	PATH_SYS = sys.argv[2]
+	enable_PCA = (sys.argv[3] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -28,15 +30,22 @@ if __name__ == '__main__':
 	print(cnnblstm)
 	if (CMD == "train"):
 		# get train_x, train_y
-		X_all, y_all = tools_6dmg.preprocess(PATH_SYS)
-		print(X_all.shape, y_all.shape)
-		train_x = torch.from_numpy(X_all)
-		train_y = torch.from_numpy(y_all)
+		train_x, train_y = tools_6dmg.preprocess(PATH_SYS)
+		# enable PCA
+		if enable_PCA:
+			train_x = tools.PCA_Xs(train_x).astype(np.float32)
+			print(train_x.shape)
+		train_x = torch.from_numpy(train_x)
+		train_y = torch.from_numpy(train_y)
 		# trainAllLayers
 		cnnblstm.trainAllLayers(train_x, train_y)
 	elif (CMD == "test"):
 		# get test_x, test_y
-		X_all, y_all = tools_6dmg.preprocess(PATH_SYS)
+		test_x, test_y = tools_6dmg.preprocess(PATH_SYS)
+		# enable PCA
+		if enable_PCA:
+			test_x = tools.PCA_Xs(test_x).astype(np.float32)
+			print(test_x.shape)
 		test_x = torch.from_numpy(X_all)
 		test_y = torch.from_numpy(y_all)
 		# get test accuracy
