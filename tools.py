@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 # local class
 import sys
 sys.path.append("../network")
-import PCA
+import PCA as mPCA
 
 def getAllData(path, if_quiet = 0):
 	n_files = 0
@@ -135,15 +135,19 @@ def PCA_Xs(Xs):
 	Xs: (20 ,3, 800)
 	"""
 	print(Xs.shape)
-	pca = PCA.PCA(target_dimension = 3)
+	# pca = mPCA.PCA(target_dimension = 3)
+	pca = PCA(n_components = 3)
 	Xs_new = []
 	for i in range(Xs.shape[0]):
+		# print(Xs[i])
 		Xsi_T = Xs[i].T
 		tail = allZeroIndex(Xsi_T)
 		# print(tail, Xsi_T.shape[0] - tail)
-		Xsi_new = pca.process(Xsi_T[:tail, :])
+		# Xsi_new = pca.process(Xsi_T[:tail, :])
+		Xsi_new = pca.fit_transform(Xsi_T[:tail, :])
 		Xsi_new = np.pad(Xsi_new, ((0, Xsi_T.shape[0] - tail), (0, 0)), "constant", constant_values = (0, 0))
 		# print(Xsi_new.shape)
+		# print(Xsi_new)
 		Xs_new.append(Xsi_new.T)
 	Xs_new = np.array(Xs_new)
 	return Xs_new
