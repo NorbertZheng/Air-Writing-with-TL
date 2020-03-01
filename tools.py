@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 import sys
 sys.path.append("../network")
 import PCA as mPCA
+from sklearn.decomposition import PCA
 
 def getAllData(path, if_quiet = 0):
 	n_files = 0
