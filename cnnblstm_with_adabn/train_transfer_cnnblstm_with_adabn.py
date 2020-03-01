@@ -4,6 +4,7 @@ import numpy as np
 import sys
 sys.path.append("..")
 import tools
+import tools_6dmg
 from transfer_cnnblstm_with_adabn import transfer_cnnblstm_with_adabn
 
 # N_TRAINSET = 0
@@ -11,7 +12,7 @@ from transfer_cnnblstm_with_adabn import transfer_cnnblstm_with_adabn
 
 """
 usage:
-	python train_transfer_cnnblstm_with_adabn.py transfer_path n_trainset n_testset transfer_params_dir
+	python train_transfer_cnnblstm_with_adabn.py transfer_path n_trainset n_testset params_dir transfer_params_dir is_6dmg
 """
 
 if __name__ == '__main__':
@@ -22,17 +23,22 @@ if __name__ == '__main__':
 	N_TRAINSET = int(sys.argv[2])
 	N_TESTSET = int(sys.argv[3])
 	PARAMS_PATH = sys.argv[4]
+	TRANSFER_PARAMS_PATH = sys.argv[5]
+	IS_6DMG = (sys.argv[6] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
-		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = use_cuda, transfer_params_dir = PARAMS_PATH).cuda()
+		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = use_cuda, params_dir = PARAMS_PATH, transfer_params_dir = TRANSFER_PARAMS_PATH).cuda()
 	else:
 		print(use_cuda)
-		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = use_cuda, transfer_params_dir = PARAMS_PATH)
+		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = use_cuda, params_dir = PARAMS_PATH, transfer_params_dir = TRANSFER_PARAMS_PATH)
 	print(m_transfer_cnnblstm_with_adabn)
 	# get transfer_x & transfer_y
-	Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(TRANSFER_PATH)
-	transfer_x, transfer_y, _ = tools.transferData(Y, segments, n_files, seq_length)
+	if IS_6DMG:
+		transfer_x, transfer_y = tools_6dmg.preprocess(TRANSFER_PATH)
+	else:
+		Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(TRANSFER_PATH)
+		transfer_x, transfer_y, _ = tools.transferData(Y, segments, n_files, seq_length)
 	# get permutation index
 	per = np.random.permutation(transfer_x.shape[0])
 	# premute transfer_x & transfer_y

@@ -16,31 +16,39 @@ enable_CORAL = False
 
 """
 usage:
-	python train_6dmg_cnnblstm_with_adabn.py train_path test_path
+	python train_6dmg_cnnblstm_with_adabn.py train_path test_path params_dir enable_PCA
 """
 
 if __name__ == '__main__':
 	torch.manual_seed(2)
 
+	TRAIN_PATH_SYS = sys.argv[1]
+	TEST_PATH_SYS = sys.argv[2]	
+	PARAMS_PATH_SYS = sys.argv[3]
+	enable_PCA = (sys.argv[4] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
-		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = 1, params_dir = "./params_6dmg", enable_CORAL = enable_CORAL).cuda()
+		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = 1, params_dir = PARAMS_PATH_SYS, enable_CORAL = enable_CORAL).cuda()
 	else:
-		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = 0, params_dir = "./params_6dmg", enable_CORAL = enable_CORAL)
+		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = 0, params_dir = PARAMS_PATH_SYS, enable_CORAL = enable_CORAL)
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
-	# train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH)
-	TRAIN_PATH_SYS = sys.argv[1]
 	train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH_SYS)
+	# enable PCA
+	if enable_PCA:
+		train_x = tools.PCA_Xs(train_x).astype(np.float32)
+		print(train_x.shape)
 	"""
 	Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(TRAIN_PATH)
 	train_x, train_y, _ = tools.transferData(Y, segments, n_files, seq_length)
 	"""
 	# get test_x, test_y
-	# test_x, test_y = tools_6dmg.preprocess(TEST_PATH)
-	TEST_PATH_SYS = sys.argv[2]
 	test_x, test_y = tools_6dmg.preprocess(TEST_PATH_SYS)
+	# enable PCA
+	if enable_PCA:
+		test_x = tools.PCA_Xs(test_x).astype(np.float32)
+		print(test_x.shape)
 	# if enable_CORAL
 	if enable_CORAL:
 		# record old size
