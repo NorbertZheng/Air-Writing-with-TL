@@ -16,6 +16,9 @@ usage:
 if __name__ == '__main__':
 	torch.manual_seed(2)
 
+	# get TRAIN_PATH_SYS & TEST_PATH_SYS
+	CMD = sys.argv[1]
+	PATH_SYS = sys.argv[2]
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -23,9 +26,6 @@ if __name__ == '__main__':
 	else:
 		cnnblstm = cnnblstm(params_file = "./params_6dmg.pkl", use_cuda = use_cuda)
 	print(cnnblstm)
-	# get TRAIN_PATH_SYS & TEST_PATH_SYS
-	CMD = sys.argv[1]
-	PATH_SYS = sys.argv[2]
 	if (CMD == "train"):
 		# get train_x, train_y
 		X_all, y_all = tools_6dmg.preprocess(PATH_SYS)

@@ -101,7 +101,7 @@ class cnnblstm(nn.Module):
 
 		return linear2_softmax_output
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 50, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""
