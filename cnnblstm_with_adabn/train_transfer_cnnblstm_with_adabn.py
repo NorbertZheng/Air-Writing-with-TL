@@ -12,7 +12,7 @@ from transfer_cnnblstm_with_adabn import transfer_cnnblstm_with_adabn
 
 """
 usage:
-	python train_transfer_cnnblstm_with_adabn.py transfer_path n_trainset n_testset params_dir transfer_params_dir is_6dmg
+	python train_transfer_cnnblstm_with_adabn.py transfer_path n_trainset n_testset params_dir transfer_params_dir enable_PCA is_6dmg
 """
 
 if __name__ == '__main__':
@@ -24,7 +24,8 @@ if __name__ == '__main__':
 	N_TESTSET = int(sys.argv[3])
 	PARAMS_PATH = sys.argv[4]
 	TRANSFER_PARAMS_PATH = sys.argv[5]
-	IS_6DMG = (sys.argv[6] == "true")
+	enable_PCA = (sys.argv[6] == "true")
+	IS_6DMG = (sys.argv[7] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -44,6 +45,10 @@ if __name__ == '__main__':
 	# premute transfer_x & transfer_y
 	transfer_x = transfer_x[per, :, :]
 	transfer_y = transfer_y[per]
+	# enable PCA
+	if enable_PCA:
+		transfer_x = tools.PCA_Xs(transfer_x).astype(np.float32)
+		print(transfer_x.shape)
 	# get train_x & train_y
 	if N_TRAINSET != 0:
 		train_x = torch.from_numpy(transfer_x[:N_TRAINSET, :, :])
