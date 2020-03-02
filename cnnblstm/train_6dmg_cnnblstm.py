@@ -39,7 +39,7 @@ if __name__ == '__main__':
 		train_x = torch.from_numpy(train_x)
 		train_y = torch.from_numpy(train_y)
 		# trainAllLayers
-		cnnblstm.trainAllLayers(train_x, train_y)
+		cnnblstm.trainAllLayers(train_x, train_y, n_epoches = 30)
 	elif (CMD == "test"):
 		# get test_x, test_y
 		test_x, test_y = tools_6dmg.preprocess(PATH_SYS)

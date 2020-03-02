@@ -142,11 +142,14 @@ def PCA_Xs(Xs):
 	for i in range(Xs.shape[0]):
 		# print(Xs[i])
 		Xsi_T = Xs[i].T
+		"""
 		tail = allZeroIndex(Xsi_T)
 		# print(tail, Xsi_T.shape[0] - tail)
 		# Xsi_new = pca.process(Xsi_T[:tail, :])
 		Xsi_new = pca.fit_transform(Xsi_T[:tail, :])
 		Xsi_new = np.pad(Xsi_new, ((0, Xsi_T.shape[0] - tail), (0, 0)), "constant", constant_values = (0, 0))
+		"""
+		Xsi_new = pca.fit_transform(Xsi_T)
 		# print(Xsi_new.shape)
 		# print(Xsi_new)
 		Xs_new.append(Xsi_new.T)

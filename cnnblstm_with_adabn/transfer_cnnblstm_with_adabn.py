@@ -64,7 +64,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net2_adabn.update_running_stats()
 		self.m_cnnblstm_with_adabn.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 30, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
 		# init params
 		# self.init_partial_weights()
 

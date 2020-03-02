@@ -20,7 +20,7 @@ class cnnblstm(nn.Module):
 		self.n_outputs = n_outputs
 		self.params_file = params_file
 
-		self.n_hidden = 150
+		self.n_hidden = 50	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
@@ -38,11 +38,15 @@ class cnnblstm(nn.Module):
 		# build net2 features.blstm
 		# self.net2 = nn.LSTM(input_size = 128, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 		self.net2 = LSTMHardSigmoid(input_size = 128, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
+		if self.bidirectional:
+			n_blstm_output = self.n_hidden * 2
+		else:
+			n_blstm_output = self.n_hidden
 
 		# build net3 classifier(fc->fc)
 		self.net3 = nn.Sequential(
 			# nn.Tanh(),
-			nn.Linear(300, 50, bias = True),
+			nn.Linear(n_blstm_output, 50, bias = True),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 			nn.Dropout(p = 0.2),
@@ -101,7 +105,7 @@ class cnnblstm(nn.Module):
 
 		return linear2_softmax_output
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 50, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""

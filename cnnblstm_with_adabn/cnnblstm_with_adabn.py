@@ -31,7 +31,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.enable_CORAL = enable_CORAL
 
 		self.n_filters = 128
-		self.n_hidden = 150
+		self.n_hidden = 50	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
@@ -54,13 +54,14 @@ class cnnblstm_with_adabn(nn.Module):
 
 		# build net2_adabn
 		if self.bidirectional:
-			self.net2_adabn = AdaBN(self.n_hidden * 2, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
+			n_blstm_output = self.n_hidden * 2
 		else:
-			self.net2_adabn = AdaBN(self.n_hidden, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
+			n_blstm_output = self.n_hidden
+		self.net2_adabn = AdaBN(n_blstm_output, variables_dir = os.path.join(self.params_dir, cnnblstm_with_adabn.NET2_ADABN), use_cuda = self.use_cuda)
 
 		# build net3 fc
 		self.net3 = nn.Sequential(
-			nn.Linear(300, 50, bias = True),
+			nn.Linear(n_blstm_output, 50, bias = True),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 		)
@@ -137,7 +138,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.net2_adabn.update_running_stats()
 		self.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 50, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""
