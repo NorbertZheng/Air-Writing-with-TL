@@ -1,5 +1,5 @@
 import os
-import csv
+# import csv
 import cv2
 import numpy as np
 import pandas as pd
@@ -133,6 +133,9 @@ def allZeroIndex(Xs_item):
 	return Xs_item.shape[0]
 
 def Kalman_Xs(Xs):
+	return Xs
+	# TODO
+	"""
 	Xs_new = []
 	for i in range(Xs.shape[0]):
 		Xsi_new = []
@@ -157,6 +160,7 @@ def Kalman_Xs(Xs):
 	Xs_new = np.array(Xs_new)
 	# print(Xs_new.shape)
 	return Xs_new
+	"""
 
 def PCA_Xs(Xs):
 	"""
