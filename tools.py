@@ -1,5 +1,6 @@
 import os
 import csv
+import cv2
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -130,6 +131,32 @@ def allZeroIndex(Xs_item):
 		if flag == 0:		# all zeros
 			return i
 	return Xs_item.shape[0]
+
+def Kalman_Xs(Xs):
+	Xs_new = []
+	for i in range(Xs.shape[0]):
+		Xsi_new = []
+		Xsi_T = Xs[i, :, :].T.astype(np.float32)	# 800 x 3
+		# get new kalman
+		kalman = cv2.KalmanFilter(6, 3)
+		# init matrix
+		kalman.measurementMatrix = np.array([[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0]], np.float32)
+		kalman.transitionMatrix = np.array([[1, 0, 0, 1, 0, 0], [0, 1, 0, 0, 1, 0], [0, 0, 1, 0, 0, 1], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0 ,0 ,1]], np.float32)
+		kalman.processNoiseCov = 0.03 * np.array([[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0 ,0 ,1]], np.float32)
+		for j in range(Xsi_T.shape[0]):
+			Xij = Xsi_T[j, :]	# 1 x 3
+			# print(Xij.shape, type(Xij))
+			Xij = Xij.reshape(3, 1)
+			kalman.correct(Xij)
+			# print(Xij)
+			Xij_new = kalman.predict()[0:3]
+			# print(Xij_new, end = "\n\n")
+			Xsi_new.append(Xij_new)
+		Xsi_new = np.array(Xsi_new, dtype = np.float32)
+		Xs_new.append(Xsi_new.T.reshape(3, 800))
+	Xs_new = np.array(Xs_new)
+	# print(Xs_new.shape)
+	return Xs_new
 
 def PCA_Xs(Xs):
 	"""

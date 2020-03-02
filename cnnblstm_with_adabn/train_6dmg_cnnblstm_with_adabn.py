@@ -16,7 +16,7 @@ enable_CORAL = False
 
 """
 usage:
-	python train_6dmg_cnnblstm_with_adabn.py train_path test_path params_dir enable_PCA
+	python train_6dmg_cnnblstm_with_adabn.py train_path test_path params_dir enable_PCA enable_Kalman
 """
 
 if __name__ == '__main__':
@@ -26,6 +26,7 @@ if __name__ == '__main__':
 	TEST_PATH_SYS = sys.argv[2]	
 	PARAMS_PATH_SYS = sys.argv[3]
 	enable_PCA = (sys.argv[4] == "true")
+	enable_Kalman = (sys.argv[5] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -35,6 +36,10 @@ if __name__ == '__main__':
 	print(m_cnnblstm_with_adabn)
 	# get train_x, train_y
 	train_x, train_y = tools_6dmg.preprocess(TRAIN_PATH_SYS)
+	# enable Kalman
+	if enable_Kalman:
+		train_x = tools.Kalman_Xs(train_x)
+		print(train_x.shape)
 	# enable PCA
 	if enable_PCA:
 		train_x = tools.PCA_Xs(train_x).astype(np.float32)
@@ -45,6 +50,10 @@ if __name__ == '__main__':
 	"""
 	# get test_x, test_y
 	test_x, test_y = tools_6dmg.preprocess(TEST_PATH_SYS)
+	# enable Kalman
+	if enable_Kalman:
+		test_x = tools.Kalman_Xs(test_x)
+		print(test_x.shape)
 	# enable PCA
 	if enable_PCA:
 		test_x = tools.PCA_Xs(test_x).astype(np.float32)

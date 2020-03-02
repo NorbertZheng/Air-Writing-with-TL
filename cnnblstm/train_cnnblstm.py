@@ -11,7 +11,7 @@ from cnnblstm import cnnblstm
 
 """
 usage:
-	python train_cnnblstm.py cmd path params_pkl
+	python train_cnnblstm.py cmd path params_pkl enable_Kalman enable_PCA
 """
 
 if __name__ == '__main__':
@@ -21,6 +21,8 @@ if __name__ == '__main__':
 	CMD = sys.argv[1]
 	PATH_SYS = sys.argv[2]
 	PARAMS_PATH_SYS = sys.argv[3]
+	enable_Kalman = (sys.argv[4] == "true")
+	enable_PCA = (sys.argv[5] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -31,17 +33,33 @@ if __name__ == '__main__':
 	if (CMD == "train"):
 		# get train_x, train_y
 		Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(PATH_SYS)
-		X_all, y_all, _ = tools.transferData(Y, segments, n_files, seq_length)
-		train_x = torch.from_numpy(X_all)
-		train_y = torch.from_numpy(y_all)
+		train_x, train_y, _ = tools.transferData(Y, segments, n_files, seq_length)
+		# enable Kalman
+		if enable_Kalman:
+			train_x = tools.Kalman_Xs(train_x).astype(np.float32)
+			print(train_x.shape)
+		# enable PCA
+		if enable_PCA:
+			train_x = tools.PCA_Xs(train_x).astype(np.float32)
+			print(train_x.shape)
+		train_x = torch.from_numpy(train_x)
+		train_y = torch.from_numpy(train_y)
 		# trainAllLayers
 		cnnblstm.trainAllLayers(train_x, train_y)
 	elif (CMD == "test"):
 		# get test_x, test_y
 		Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(PATH_SYS)
-		X_all, y_all, _ = tools.transferData(Y, segments, n_files, seq_length)
-		test_x = torch.from_numpy(X_all)
-		test_y = torch.from_numpy(y_all)
+		test_x, test_y, _ = tools.transferData(Y, segments, n_files, seq_length)
+		# enable Kalman
+		if enable_Kalman:
+			test_x = tools.Kalman_Xs(test_x).astype(np.float32)
+			print(test_x.shape)
+		# enable PCA
+		if enable_PCA:
+			test_x = tools.PCA_Xs(test_x).astype(np.float32)
+			print(test_x.shape)
+		test_x = torch.from_numpy(test_x)
+		test_y = torch.from_numpy(test_y)
 		# get test accuracy
 		cnnblstm.getTestAccuracy(test_x, test_y)
 	else:

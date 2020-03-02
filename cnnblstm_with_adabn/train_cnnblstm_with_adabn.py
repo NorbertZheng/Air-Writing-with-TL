@@ -12,7 +12,7 @@ from cnnblstm_with_adabn import cnnblstm_with_adabn
 
 """
 usage:
-	python train_cnnblstm_with_adabn.py cmd path params_dir enable_PCA
+	python train_cnnblstm_with_adabn.py cmd path params_dir enable_Kalman enable_PCA
 """
 
 if __name__ == '__main__':
@@ -22,7 +22,8 @@ if __name__ == '__main__':
 	CMD = sys.argv[1]
 	PATH_SYS = sys.argv[2]
 	PARAMS_PATH_SYS = sys.argv[3]
-	enable_PCA = (sys.argv[4] == "true")
+	enable_Kalman = (sys.argv[4] == "true")
+	enable_PCA = (sys.argv[5] == "true")
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -34,6 +35,10 @@ if __name__ == '__main__':
 		# get train_x, train_y
 		Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(PATH_SYS)
 		train_x, train_y, _ = tools.transferData(Y, segments, n_files, seq_length)
+		# enable Kalman
+		if enable_Kalman:
+			train_x = tools.Kalman_Xs(train_x).astype(np.float32)
+			print(train_x.shape)
 		# enable PCA
 		if enable_PCA:
 			train_x = tools.PCA_Xs(train_x).astype(np.float32)
@@ -46,6 +51,10 @@ if __name__ == '__main__':
 		# get test_x, test_y
 		Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(PATH_SYS)
 		test_x, test_y, _ = tools.transferData(Y, segments, n_files, seq_length)
+		# enable Kalman
+		if enable_Kalman:
+			test_x = tools.Kalman_Xs(test_x).astype(np.float32)
+			print(test_x.shape)
 		# enable PCA
 		if enable_PCA:
 			test_x = tools.PCA_Xs(test_x).astype(np.float32)
