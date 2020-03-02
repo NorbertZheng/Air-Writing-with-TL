@@ -47,8 +47,8 @@ if __name__ == '__main__':
 		if enable_PCA:
 			test_x = tools.PCA_Xs(test_x).astype(np.float32)
 			print(test_x.shape)
-		test_x = torch.from_numpy(X_all)
-		test_y = torch.from_numpy(y_all)
+		test_x = torch.from_numpy(test_x)
+		test_y = torch.from_numpy(test_y)
 		# get test accuracy
 		cnnblstm.getTestAccuracy(test_x, test_y)
 	else:
