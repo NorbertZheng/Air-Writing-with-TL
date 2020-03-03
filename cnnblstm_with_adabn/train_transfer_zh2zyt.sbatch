@@ -1,7 +1,7 @@
 #!/bin/sh
 # unsuspected
 rm -rf ./params_zh2zyt_uPCA
-python train_cnnblstm_with_adabn.py train ../dataset/zhMiPlay/ ./params_zh2zyt_uPCA false false
+python train_cnnblstm_with_adabn.py train ../dataset/zhP30/ ./params_zh2zyt_uPCA false false
 python train_cnnblstm_with_adabn.py test ../dataset/zytP30/ ./params_zh2zyt_uPCA false false
 # semi-suspected
 rm -rf ./transfer_params_zh2zyt_uPCA_100_semi
