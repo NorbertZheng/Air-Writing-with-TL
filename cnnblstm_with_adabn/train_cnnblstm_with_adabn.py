@@ -46,7 +46,7 @@ if __name__ == '__main__':
 		train_x = torch.from_numpy(train_x)
 		train_y = torch.from_numpy(train_y)
 		# trainAllLayers
-		m_cnnblstm_with_adabn.trainAllLayers(train_x, train_y)
+		m_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, n_epoches = 20)
 	elif (CMD == "test"):
 		# get test_x, test_y
 		Y, segments, maxlen_seg, n_files, seq_length = tools.getAllData(PATH_SYS)

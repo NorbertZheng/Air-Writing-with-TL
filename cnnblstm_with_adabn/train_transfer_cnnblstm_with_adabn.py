@@ -75,7 +75,7 @@ if __name__ == '__main__':
 	# get test accuracy
 	m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x, test_y)
 	# trainAllLayers
-	m_transfer_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, test_x = test_x, n_epoches = 30)
+	m_transfer_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, test_x = test_x, n_epoches = 20)
 	# get test accuracy
 	m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x, test_y)
 
