@@ -31,7 +31,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.enable_CORAL = enable_CORAL
 
 		self.n_filters = 128
-		self.n_hidden = 50	# 150
+		self.n_hidden = 150	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
