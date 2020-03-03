@@ -20,7 +20,8 @@ def preprocess(path):
                 data[index][0][i] = array[1][i]
                 data[index][1][i] = array[2][i]
                 data[index][2][i] = array[3][i]
-            label[index] = filename[4]
+            # label[index] = filename[4]
+            label[index] = ord(filename[6]) - ord("A")
             index += 1
     return (data, label)
 
