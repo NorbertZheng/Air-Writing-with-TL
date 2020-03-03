@@ -4,8 +4,8 @@ run:
 
 clean_all:
 	make clean
-	rm -rf ./transfer_params
-	rm -rf ./params
+	rm -rf ./transfer_params_*
+	rm -rf ./params_*
 
 clean:
 	rm -rf ./__pycache__
