@@ -114,19 +114,19 @@ class cnnblstm_with_adabn(nn.Module):
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
 		# maxPool1d_adabn_output = maxPool1d_output
-		maxPool1d_adabn_output = self.net1_adabn(maxPool1d_output)
+		maxPool1d_adabn_output, maxPool1d_output = self.net1_adabn(maxPool1d_output), None
 		maxPool1d_adabn_t_output = maxPool1d_adabn_output.permute(0, 2, 1).contiguous()
 		# BiLSTM
-		bilstm_output, self.hidden = self.net2(maxPool1d_adabn_t_output, self.hidden)
+		bilstm_output, self.hidden, maxPool1d_adabn_t_output = self.net2(maxPool1d_adabn_t_output, self.hidden), None
 		# MaxPooling1D time_steps
 		bilstm_output = bilstm_output.permute(0, 2, 1)
-		maxPooling_output = F.max_pool1d(bilstm_output, kernel_size = bilstm_output.size(2)).squeeze(2)
+		maxPooling_output, bilstm_output = F.max_pool1d(bilstm_output, kernel_size = bilstm_output.size(2)).squeeze(2), None
 		# maxPooling_adabn_output = maxPooling_output
-		maxPooling_adabn_output = self.net2_adabn(maxPooling_output)
+		maxPooling_adabn_output, maxPooling_output = self.net2_adabn(maxPooling_output), None
 		# get classifier
-		net3_output = self.net3(maxPooling_adabn_output)
-		net3_adabn_output = self.net3_adabn(net3_output)
-		linear2_softmax_output = self.net4(net3_adabn_output)
+		net3_output, maxPooling_adabn_output = self.net3(maxPooling_adabn_output), None
+		net3_adabn_output, net3_output = self.net3_adabn(net3_output), None
+		linear2_softmax_output, net3_adabn_output = self.net4(net3_adabn_output), None
 
 		return linear2_softmax_output
 
