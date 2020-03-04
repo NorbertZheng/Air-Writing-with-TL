@@ -101,6 +101,10 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 
 		if train_x != None:
 			print("train start!")
+			# if use_cuda
+			if self.use_cuda:
+				train_x = train_x.cuda()
+				train_y = train_y.cuda()
 			# get train_data
 			train_data = torch.utils.data.TensorDataset(train_x, train_y)
 			# Data Loader for easy mini-batch return in training
@@ -157,11 +161,6 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		# set eval
 		self.eval()
 
-		with torch.no_grad():
-			if self.use_cuda:
-				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
-			else:
-				test_x, test_y = Variable(test_x), Variable(test_y)
 		# get hidden
 		self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
 		# update adabn running stats
@@ -172,6 +171,12 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 			parallel_cba = parallel_cba.cuda()
 		else:
 			parallel_cba = self
+		# cuda test_data
+		with torch.no_grad():
+			if self.use_cuda:
+				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
+			else:
+				test_x, test_y = Variable(test_x), Variable(test_y)
 		# get output
 		output = parallel_cba(test_x)
 		print(output)

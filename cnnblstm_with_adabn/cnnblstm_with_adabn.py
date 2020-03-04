@@ -154,10 +154,6 @@ class cnnblstm_with_adabn(nn.Module):
 			train_x = Coral.CORAL_torch(train_x, test_x)
 		# review train_x
 		train_x = train_x.view(-1, self.n_features, self.time_steps)
-		# get train_data
-		train_data = torch.utils.data.TensorDataset(train_x, train_y)
-		# Data Loader for easy mini-batch return in training
-		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
 		optimizer = torch.optim.Adam(self.parameters(), lr = learning_rate)
 		# the target label is not one-hotted
@@ -178,6 +174,17 @@ class cnnblstm_with_adabn(nn.Module):
 			parallel_cba = parallel_cba.cuda()
 		else:
 			parallel_cba = self
+
+		# if use_cuda
+		if self.use_cuda:
+			train_x = train_x.cuda()
+			train_y = train_y.cuda()
+ 
+		# get train_data
+		train_data = torch.utils.data.TensorDataset(train_x, train_y)
+		# Data Loader for easy mini-batch return in training
+		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
+		
 
 		# training and testing
 		for epoch in range(n_epoches):
@@ -229,11 +236,6 @@ class cnnblstm_with_adabn(nn.Module):
 		# set eval
 		self.eval()
 
-		with torch.no_grad():
-			if self.use_cuda:
-				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
-			else:
-				test_x, test_y = Variable(test_x), Variable(test_y)
 		# get hidden
 		self.init_hidden(test_x.size(0) // torch.cuda.device_count())
 		# update adabn running stats
@@ -244,6 +246,12 @@ class cnnblstm_with_adabn(nn.Module):
 			parallel_cba = parallel_cba.cuda()
 		else:
 			parallel_cba = self
+		# cuda test_data
+		with torch.no_grad():
+			if self.use_cuda:
+				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
+			else:
+				test_x, test_y = Variable(test_x), Variable(test_y)
 		# get output
 		with torch.no_grad():
 			output = parallel_cba(test_x)
