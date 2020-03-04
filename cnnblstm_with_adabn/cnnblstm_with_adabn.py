@@ -173,7 +173,10 @@ class cnnblstm_with_adabn(nn.Module):
 		self.train()
 
 		# get parallel model
-		parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
+		if torch.cuda.device_count() > 1:
+			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
+		else:
+			parallel_cba = self
 
 		# training and testing
 		for epoch in range(n_epoches):
@@ -187,7 +190,7 @@ class cnnblstm_with_adabn(nn.Module):
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
 				# get hidden
-				self.init_hidden(b_x.size(0))
+				self.init_hidden(b_x.size(0) / torch.cuda.device_count())
 				# update adabn running stats
 				self.update_adabn_running_stats()
 				# get output
@@ -231,11 +234,14 @@ class cnnblstm_with_adabn(nn.Module):
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
 		# get hidden
-		self.init_hidden(test_x.size(0))
+		self.init_hidden(test_x.size(0) / torch.cuda.device_count())
 		# update adabn running stats
 		self.update_adabn_running_stats()
 		# get parallel model
-		parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
+		if torch.cuda.device_count() > 1:
+			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
+		else:
+			parallel_cba = self
 		# get output
 		with torch.no_grad():
 			output = parallel_cba(test_x)
