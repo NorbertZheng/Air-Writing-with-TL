@@ -1,5 +1,3 @@
-import os
-os.environ["CUDA_VISIBLE_DEVICS"] = "0, 1"
 import torch
 import numpy as np
 # local class
