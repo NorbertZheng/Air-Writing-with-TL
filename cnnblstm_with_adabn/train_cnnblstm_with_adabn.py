@@ -32,6 +32,7 @@ if __name__ == '__main__':
 		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = use_cuda, params_dir = PARAMS_PATH_SYS).cuda()
 	else:
 		m_cnnblstm_with_adabn = cnnblstm_with_adabn(use_cuda = use_cuda, params_dir = PARAMS_PATH_SYS)
+	m_cnnblstm_with_adabn = torch.nn.DataParallel(m_cnnblstm_with_adabn)
 	print(m_cnnblstm_with_adabn)
 	if (CMD == "train"):
 		# get train_x, train_y
