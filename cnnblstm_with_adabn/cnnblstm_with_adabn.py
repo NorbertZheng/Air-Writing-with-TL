@@ -172,6 +172,9 @@ class cnnblstm_with_adabn(nn.Module):
 		# set train mode True
 		self.train()
 
+		# get parallel model
+		parallel_cba = torch.nn.DataParallel(self)
+
 		# training and testing
 		for epoch in range(n_epoches):
 			# init loss & acc
@@ -188,7 +191,7 @@ class cnnblstm_with_adabn(nn.Module):
 				# update adabn running stats
 				self.update_adabn_running_stats()
 				# get output
-				output = self(b_x)									# CNN_BLSTM output
+				output = parallel_cba(b_x)									# CNN_BLSTM output
 				# get loss
 				loss = loss_func(output, b_y)						# cross entropy loss
 				train_loss += loss.item() * len(b_y)
@@ -231,9 +234,11 @@ class cnnblstm_with_adabn(nn.Module):
 		self.init_hidden(test_x.size(0))
 		# update adabn running stats
 		self.update_adabn_running_stats()
+		# get parallel model
+		parallel_cba = torch.nn.DataParallel(self)
 		# get output
 		with torch.no_grad():
-			output = self(test_x)
+			output = parallel_cba(test_x)
 		print(output)
 		prediction = torch.max(output, 1)[1]
 		pred_y = prediction.cpu().data.numpy()

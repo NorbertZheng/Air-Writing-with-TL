@@ -36,7 +36,6 @@ if __name__ == '__main__':
 	else:
 		print(use_cuda)
 		m_transfer_cnnblstm_with_adabn = transfer_cnnblstm_with_adabn(use_cuda = use_cuda, params_dir = PARAMS_PATH, transfer_params_dir = TRANSFER_PARAMS_PATH)
-	m_transfer_cnnblstm_with_adabn = torch.nn.DataParallel(m_transfer_cnnblstm_with_adabn)
 	print(m_transfer_cnnblstm_with_adabn)
 	# get transfer_x & transfer_y
 	if IS_6DMG:
