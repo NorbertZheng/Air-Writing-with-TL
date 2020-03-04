@@ -77,7 +77,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		# get parallel model
 		if torch.cuda.device_count() > 1:
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
-			parallel_cba.cuda()
+			parallel_cba = parallel_cba.cuda()
 		else:
 			parallel_cba = self
 
@@ -169,7 +169,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		# get parallel model
 		if torch.cuda.device_count() > 1:
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
-			parallel_cba.cuda()
+			parallel_cba = parallel_cba.cuda()
 		else:
 			parallel_cba = self
 		# get output
