@@ -333,6 +333,7 @@ def LSTMCell(input, hidden, w_ih, w_hh, b_ih=None, b_hh=None):
 	A modified LSTM cell with hard sigmoid activation on the input, forget and output gates.
 	"""
 	hx, cx = hidden
+	print(input, w_ih, b_ih, hx, w_hh, b_hh)
 	gates = torch.mm(input, w_ih.t()) + torch.mm(hx, w_hh.t()) + b_ih + b_hh
 
 	ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)
