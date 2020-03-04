@@ -236,10 +236,6 @@ class cnnblstm_with_adabn(nn.Module):
 		# set eval
 		self.eval()
 
-		# get hidden
-		self.init_hidden(test_x.size(0) // torch.cuda.device_count())
-		# update adabn running stats
-		self.update_adabn_running_stats()
 		# get parallel model
 		if torch.cuda.device_count() > 1:
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
@@ -252,6 +248,10 @@ class cnnblstm_with_adabn(nn.Module):
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
+		# get hidden
+		self.init_hidden(test_x.size(0) // torch.cuda.device_count())
+		# update adabn running stats
+		self.update_adabn_running_stats()
 		# get output
 		with torch.no_grad():
 			output = parallel_cba(test_x)
