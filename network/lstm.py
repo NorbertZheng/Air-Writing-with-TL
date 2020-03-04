@@ -1,350 +1,243 @@
-# -*- coding: utf-8 -*-
-""" Implement a pyTorch LSTM with hard sigmoid reccurent activation functions.
-	Adapted from the non-cuda variant of pyTorch LSTM at
-	https://github.com/pytorch/pytorch/blob/master/torch/nn/_functions/rnn.py
-"""
-
-from __future__ import print_function, division
-import math
 import torch
-
-from torch.nn import Module
-from torch.nn.parameter import Parameter
-from torch.nn.utils.rnn import PackedSequence
 import torch.nn.functional as F
+from torch.nn import RNNBase, RnnCellBase
 
-class LSTMHardSigmoid(Module):
+class LSTM(RNNBase):
+	r"""Applies a multi-layer long short-term memory (LSTM) RNN to an input
+	sequence.
+	For each element in the input sequence, each layer computes the following
+	function:
+	.. math::
+		\begin{array}{ll} \\
+			i_t = \sigma(W_{ii} x_t + b_{ii} + W_{hi} h_{t-1} + b_{hi}) \\
+			f_t = \sigma(W_{if} x_t + b_{if} + W_{hf} h_{t-1} + b_{hf}) \\
+			g_t = \tanh(W_{ig} x_t + b_{ig} + W_{hg} h_{t-1} + b_{hg}) \\
+			o_t = \sigma(W_{io} x_t + b_{io} + W_{ho} h_{t-1} + b_{ho}) \\
+			c_t = f_t \odot c_{t-1} + i_t \odot g_t \\
+			h_t = o_t \odot \tanh(c_t) \\
+		\end{array}
+	where :math:`h_t` is the hidden state at time `t`, :math:`c_t` is the cell
+	state at time `t`, :math:`x_t` is the input at time `t`, :math:`h_{t-1}`
+	is the hidden state of the layer at time `t-1` or the initial hidden
+	state at time `0`, and :math:`i_t`, :math:`f_t`, :math:`g_t`,
+	:math:`o_t` are the input, forget, cell, and output gates, respectively.
+	:math:`\sigma` is the sigmoid function, and :math:`\odot` is the Hadamard product.
+	In a multilayer LSTM, the input :math:`x^{(l)}_t` of the :math:`l` -th layer
+	(:math:`l >= 2`) is the hidden state :math:`h^{(l-1)}_t` of the previous layer multiplied by
+	dropout :math:`\delta^{(l-1)}_t` where each :math:`\delta^{(l-1)}_t` is a Bernoulli random
+	variable which is :math:`0` with probability :attr:`dropout`.
+	Args:
+		input_size: The number of expected features in the input `x`
+		hidden_size: The number of features in the hidden state `h`
+		num_layers: Number of recurrent layers. E.g., setting ``num_layers=2``
+			would mean stacking two LSTMs together to form a `stacked LSTM`,
+			with the second LSTM taking in outputs of the first LSTM and
+			computing the final results. Default: 1
+		bias: If ``False``, then the layer does not use bias weights `b_ih` and `b_hh`.
+			Default: ``True``
+		batch_first: If ``True``, then the input and output tensors are provided
+			as (batch, seq, feature). Default: ``False``
+		dropout: If non-zero, introduces a `Dropout` layer on the outputs of each
+			LSTM layer except the last layer, with dropout probability equal to
+			:attr:`dropout`. Default: 0
+		bidirectional: If ``True``, becomes a bidirectional LSTM. Default: ``False``
+	Inputs: input, (h_0, c_0)
+		- **input** of shape `(seq_len, batch, input_size)`: tensor containing the features
+		  of the input sequence.
+		  The input can also be a packed variable length sequence.
+		  See :func:`torch.nn.utils.rnn.pack_padded_sequence` or
+		  :func:`torch.nn.utils.rnn.pack_sequence` for details.
+		- **h_0** of shape `(num_layers * num_directions, batch, hidden_size)`: tensor
+		  containing the initial hidden state for each element in the batch.
+		  If the LSTM is bidirectional, num_directions should be 2, else it should be 1.
+		- **c_0** of shape `(num_layers * num_directions, batch, hidden_size)`: tensor
+		  containing the initial cell state for each element in the batch.
+		  If `(h_0, c_0)` is not provided, both **h_0** and **c_0** default to zero.
+	Outputs: output, (h_n, c_n)
+		- **output** of shape `(seq_len, batch, num_directions * hidden_size)`: tensor
+		  containing the output features `(h_t)` from the last layer of the LSTM,
+		  for each `t`. If a :class:`torch.nn.utils.rnn.PackedSequence` has been
+		  given as the input, the output will also be a packed sequence.
+		  For the unpacked case, the directions can be separated
+		  using ``output.view(seq_len, batch, num_directions, hidden_size)``,
+		  with forward and backward being direction `0` and `1` respectively.
+		  Similarly, the directions can be separated in the packed case.
+		- **h_n** of shape `(num_layers * num_directions, batch, hidden_size)`: tensor
+		  containing the hidden state for `t = seq_len`.
+		  Like *output*, the layers can be separated using
+		  ``h_n.view(num_layers, num_directions, batch, hidden_size)`` and similarly for *c_n*.
+		- **c_n** of shape `(num_layers * num_directions, batch, hidden_size)`: tensor
+		  containing the cell state for `t = seq_len`.
+	Attributes:
+		weight_ih_l[k] : the learnable input-hidden weights of the :math:`\text{k}^{th}` layer
+			`(W_ii|W_if|W_ig|W_io)`, of shape `(4*hidden_size, input_size)` for `k = 0`.
+			Otherwise, the shape is `(4*hidden_size, num_directions * hidden_size)`
+		weight_hh_l[k] : the learnable hidden-hidden weights of the :math:`\text{k}^{th}` layer
+			`(W_hi|W_hf|W_hg|W_ho)`, of shape `(4*hidden_size, hidden_size)`
+		bias_ih_l[k] : the learnable input-hidden bias of the :math:`\text{k}^{th}` layer
+			`(b_ii|b_if|b_ig|b_io)`, of shape `(4*hidden_size)`
+		bias_hh_l[k] : the learnable hidden-hidden bias of the :math:`\text{k}^{th}` layer
+			`(b_hi|b_hf|b_hg|b_ho)`, of shape `(4*hidden_size)`
+	.. note::
+		All the weights and biases are initialized from :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})`
+		where :math:`k = \frac{1}{\text{hidden\_size}}`
+	.. include:: cudnn_persistent_rnn.rst
+	Examples::
+		>>> rnn = nn.LSTM(10, 20, 2)
+		>>> input = torch.randn(5, 3, 10)
+		>>> h0 = torch.randn(2, 3, 20)
+		>>> c0 = torch.randn(2, 3, 20)
+		>>> output, (hn, cn) = rnn(input, (h0, c0))
+	"""
+	def __init__(self, *args, **kwargs):
+		super(LSTM, self).__init__('LSTM', *args, **kwargs)
 
-	def __init__(self, input_size, hidden_size,
-				 num_layers=1, bias=True, batch_first=False,
-				 dropout=0, bidirectional=False):
-		super(LSTMHardSigmoid, self).__init__()
-		self.input_size = input_size
-		self.hidden_size = hidden_size
-		self.num_layers = num_layers
-		self.bias = bias
-		self.batch_first = batch_first
-		self.dropout = dropout
-		self.dropout_state = {}
-		self.bidirectional = bidirectional
-		num_directions = 2 if bidirectional else 1
+	def check_forward_args(self, input, hidden, batch_sizes):
+		# type: (Tensor, Tuple[Tensor, Tensor], Optional[Tensor]) -> None
+		self.check_input(input, batch_sizes)
+		expected_hidden_size = self.get_expected_hidden_size(input, batch_sizes)
 
-		gate_size = 4 * hidden_size
+		self.check_hidden_size(hidden[0], expected_hidden_size,
+							   'Expected hidden[0] size {}, got {}')
+		self.check_hidden_size(hidden[1], expected_hidden_size,
+							   'Expected hidden[1] size {}, got {}')
 
-		self._all_weights = []
-		for layer in range(num_layers):
-			for direction in range(num_directions):
-				layer_input_size = input_size if layer == 0 else hidden_size * num_directions
+	def permute_hidden(self, hx, permutation):
+		# type: (Tuple[Tensor, Tensor], Optional[Tensor]) -> Tuple[Tensor, Tensor]
+		if permutation is None:
+			return hx
+		return apply_permutation(hx[0], permutation), apply_permutation(hx[1], permutation)
 
-				w_ih = Parameter(torch.Tensor(gate_size, layer_input_size))
-				w_hh = Parameter(torch.Tensor(gate_size, hidden_size))
-				b_ih = Parameter(torch.Tensor(gate_size))
-				b_hh = Parameter(torch.Tensor(gate_size))
-				layer_params = (w_ih, w_hh, b_ih, b_hh)
+	@torch._jit_internal._overload_method  # noqa: F811
+	def forward(self, input, hx=None):  # noqa: F811
+		# type: (Tensor, Optional[Tuple[Tensor, Tensor]]) -> Tuple[Tensor, Tuple[Tensor, Tensor]]
+		pass
 
-				suffix = '_reverse' if direction == 1 else ''
-				param_names = ['weight_ih_l{}{}', 'weight_hh_l{}{}']
-				if bias:
-					param_names += ['bias_ih_l{}{}', 'bias_hh_l{}{}']
-				param_names = [x.format(layer, suffix) for x in param_names]
+	@torch._jit_internal._overload_method  # noqa: F811
+	def forward(self, input, hx=None):  # noqa: F811
+		# type: (PackedSequence, Optional[Tuple[Tensor, Tensor]]) -> Tuple[PackedSequence, Tuple[Tensor, Tensor]]  # noqa
+		pass
 
-				for name, param in zip(param_names, layer_params):
-					setattr(self, name, param)
-				self._all_weights.append(param_names)
-
-		self.flatten_parameters()
-		self.reset_parameters()
-
-	def flatten_parameters(self):
-		"""Resets parameter data pointer so that they can use faster code paths.
-
-		Right now, this is a no-op wince we don't use CUDA acceleration.
-		"""
-		self._data_ptrs = []
-
-	def _apply(self, fn):
-		ret = super(LSTMHardSigmoid, self)._apply(fn)
-		self.flatten_parameters()
-		return ret
-
-	def reset_parameters(self):
-		stdv = 1.0 / math.sqrt(self.hidden_size)
-		for weight in self.parameters():
-			weight.data.uniform_(-stdv, stdv)
-
-	def forward(self, input, hx=None):
-		is_packed = isinstance(input, PackedSequence)
-		if is_packed:
-			input, batch_sizes = input
+	def forward(self, input, hx=None):  # noqa: F811
+		orig_input = input
+		# xxx: isinstance check needs to be in conditional for TorchScript to compile
+		if isinstance(orig_input, PackedSequence):
+			input, batch_sizes, sorted_indices, unsorted_indices = input
 			max_batch_size = batch_sizes[0]
+			max_batch_size = int(max_batch_size)
 		else:
 			batch_sizes = None
 			max_batch_size = input.size(0) if self.batch_first else input.size(1)
+			sorted_indices = None
+			unsorted_indices = None
 
 		if hx is None:
 			num_directions = 2 if self.bidirectional else 1
-			hx = torch.autograd.Variable(input.data.new(self.num_layers *
-														num_directions,
-														max_batch_size,
-														self.hidden_size).zero_(), requires_grad=False)
-			hx = (hx, hx)
-
-		has_flat_weights = list(p.data.data_ptr() for p in self.parameters()) == self._data_ptrs
-		if has_flat_weights:
-			first_data = next(self.parameters()).data
-			assert first_data.storage().size() == self._param_buf_size
-			flat_weight = first_data.new().set_(first_data.storage(), 0, torch.Size([self._param_buf_size]))
+			zeros = torch.zeros(self.num_layers * num_directions,
+								max_batch_size, self.hidden_size,
+								dtype=input.dtype, device=input.device)
+			hx = (zeros, zeros)
 		else:
-			flat_weight = None
-		func = AutogradRNN(
-			self.input_size,
-			self.hidden_size,
-			num_layers=self.num_layers,
-			batch_first=self.batch_first,
-			dropout=self.dropout,
-			train=self.training,
-			bidirectional=self.bidirectional,
-			batch_sizes=batch_sizes,
-			dropout_state=self.dropout_state,
-			flat_weight=flat_weight
+			# Each batch of the hidden state should match the input sequence that
+			# the user believes he/she is passing in.
+			hx = self.permute_hidden(hx, sorted_indices)
+
+		self.check_forward_args(input, hx, batch_sizes)
+		if batch_sizes is None:
+			result = _VF.lstm(input, hx, self._flat_weights, self.bias, self.num_layers,
+							  self.dropout, self.training, self.bidirectional, self.batch_first)
+		else:
+			result = _VF.lstm(input, batch_sizes, hx, self._flat_weights, self.bias,
+							  self.num_layers, self.dropout, self.training, self.bidirectional)
+		output = result[0]
+		hidden = result[1:]
+		# xxx: isinstance check needs to be in conditional for TorchScript to compile
+		if isinstance(orig_input, PackedSequence):
+			output_packed = PackedSequence(output, batch_sizes, sorted_indices, unsorted_indices)
+			return output_packed, self.permute_hidden(hidden, unsorted_indices)
+		else:
+			return output, self.permute_hidden(hidden, unsorted_indices)
+
+class LSTMCell(RNNCellBase):
+	r"""A long short-term memory (LSTM) cell.
+	.. math::
+		\begin{array}{ll}
+		i = \sigma(W_{ii} x + b_{ii} + W_{hi} h + b_{hi}) \\
+		f = \sigma(W_{if} x + b_{if} + W_{hf} h + b_{hf}) \\
+		g = \tanh(W_{ig} x + b_{ig} + W_{hg} h + b_{hg}) \\
+		o = \sigma(W_{io} x + b_{io} + W_{ho} h + b_{ho}) \\
+		c' = f * c + i * g \\
+		h' = o * \tanh(c') \\
+		\end{array}
+	where :math:`\sigma` is the sigmoid function, and :math:`*` is the Hadamard product.
+	Args:
+		input_size: The number of expected features in the input `x`
+		hidden_size: The number of features in the hidden state `h`
+		bias: If ``False``, then the layer does not use bias weights `b_ih` and
+			`b_hh`. Default: ``True``
+	Inputs: input, (h_0, c_0)
+		- **input** of shape `(batch, input_size)`: tensor containing input features
+		- **h_0** of shape `(batch, hidden_size)`: tensor containing the initial hidden
+		  state for each element in the batch.
+		- **c_0** of shape `(batch, hidden_size)`: tensor containing the initial cell state
+		  for each element in the batch.
+		  If `(h_0, c_0)` is not provided, both **h_0** and **c_0** default to zero.
+	Outputs: (h_1, c_1)
+		- **h_1** of shape `(batch, hidden_size)`: tensor containing the next hidden state
+		  for each element in the batch
+		- **c_1** of shape `(batch, hidden_size)`: tensor containing the next cell state
+		  for each element in the batch
+	Attributes:
+		weight_ih: the learnable input-hidden weights, of shape
+			`(4*hidden_size, input_size)`
+		weight_hh: the learnable hidden-hidden weights, of shape
+			`(4*hidden_size, hidden_size)`
+		bias_ih: the learnable input-hidden bias, of shape `(4*hidden_size)`
+		bias_hh: the learnable hidden-hidden bias, of shape `(4*hidden_size)`
+	.. note::
+		All the weights and biases are initialized from :math:`\mathcal{U}(-\sqrt{k}, \sqrt{k})`
+		where :math:`k = \frac{1}{\text{hidden\_size}}`
+	Examples::
+		>>> rnn = nn.LSTMCell(10, 20)
+		>>> input = torch.randn(6, 3, 10)
+		>>> hx = torch.randn(3, 20)
+		>>> cx = torch.randn(3, 20)
+		>>> output = []
+		>>> for i in range(6):
+				hx, cx = rnn(input[i], (hx, cx))
+				output.append(hx)
+	"""
+
+	def __init__(self, input_size, hidden_size, bias=True):
+		super(LSTMCell, self).__init__(input_size, hidden_size, bias, num_chunks=4)
+
+	def forward(self, input, hx=None):
+		# type: (Tensor, Optional[Tuple[Tensor, Tensor]]) -> Tuple[Tensor, Tensor]
+		self.check_forward_input(input)
+		if hx is None:
+			zeros = torch.zeros(input.size(0), self.hidden_size, dtype=input.dtype, device=input.device)
+			hx = (zeros, zeros)
+		self.check_forward_hidden(input, hx[0], '[0]')
+		self.check_forward_hidden(input, hx[1], '[1]')
+		return lstm_cell(
+			input, hx,
+			self.weight_ih, self.weight_hh,
+			self.bias_ih, self.bias_hh,
 		)
-		output, hidden = func(input, self.all_weights, hx)
-		if is_packed:
-			output = PackedSequence(output, batch_sizes)
-		return output, hidden
 
-	def __repr__(self):
-		s = '{name}({input_size}, {hidden_size}'
-		if self.num_layers != 1:
-			s += ', num_layers={num_layers}'
-		if self.bias is not True:
-			s += ', bias={bias}'
-		if self.batch_first is not False:
-			s += ', batch_first={batch_first}'
-		if self.dropout != 0:
-			s += ', dropout={dropout}'
-		if self.bidirectional is not False:
-			s += ', bidirectional={bidirectional}'
-		s += ')'
-		return s.format(name=self.__class__.__name__, **self.__dict__)
-
-	def __setstate__(self, d):
-		super(LSTMHardSigmoid, self).__setstate__(d)
-		self.__dict__.setdefault('_data_ptrs', [])
-		if 'all_weights' in d:
-			self._all_weights = d['all_weights']
-		if isinstance(self._all_weights[0][0], str):
-			return
-		num_layers = self.num_layers
-		num_directions = 2 if self.bidirectional else 1
-		self._all_weights = []
-		for layer in range(num_layers):
-			for direction in range(num_directions):
-				suffix = '_reverse' if direction == 1 else ''
-				weights = ['weight_ih_l{}{}', 'weight_hh_l{}{}', 'bias_ih_l{}{}', 'bias_hh_l{}{}']
-				weights = [x.format(layer, suffix) for x in weights]
-				if self.bias:
-					self._all_weights += [weights]
-				else:
-					self._all_weights += [weights[:2]]
-
-	@property
-	def all_weights(self):
-		return [[getattr(self, weight) for weight in weights] for weights in self._all_weights]
-
-def AutogradRNN(input_size, hidden_size, num_layers=1, batch_first=False,
-				dropout=0, train=True, bidirectional=False, batch_sizes=None,
-				dropout_state=None, flat_weight=None):
-
-	cell = LSTMCell
-
-	if batch_sizes is None:
-		rec_factory = Recurrent
-	else:
-		rec_factory = variable_recurrent_factory(batch_sizes)
-
-	if bidirectional:
-		layer = (rec_factory(cell), rec_factory(cell, reverse=True))
-	else:
-		layer = (rec_factory(cell),)
-
-	func = StackedRNN(layer,
-					  num_layers,
-					  True,
-					  dropout=dropout,
-					  train=train)
-
-	def forward(input, weight, hidden):
-		if batch_first and batch_sizes is None:
-			input = input.transpose(0, 1)
-
-		nexth, output = func(input, hidden, weight)
-
-		if batch_first and batch_sizes is None:
-			output = output.transpose(0, 1)
-
-		return output, nexth
-
-	return forward
-
-def Recurrent(inner, reverse=False):
-	def forward(input, hidden, weight):
-		output = []
-		steps = range(input.size(0) - 1, -1, -1) if reverse else range(input.size(0))
-		for i in steps:
-			hidden = inner(input[i], hidden, *weight)
-			# hack to handle LSTM
-			output.append(hidden[0] if isinstance(hidden, tuple) else hidden)
-
-		if reverse:
-			output.reverse()
-		output = torch.cat(output, 0).view(input.size(0), *output[0].size())
-
-		return hidden, output
-
-	return forward
-
-
-def variable_recurrent_factory(batch_sizes):
-	def fac(inner, reverse=False):
-		if reverse:
-			return VariableRecurrentReverse(batch_sizes, inner)
-		else:
-			return VariableRecurrent(batch_sizes, inner)
-	return fac
-
-def VariableRecurrent(batch_sizes, inner):
-	def forward(input, hidden, weight):
-		output = []
-		input_offset = 0
-		last_batch_size = batch_sizes[0]
-		hiddens = []
-		flat_hidden = not isinstance(hidden, tuple)
-		if flat_hidden:
-			hidden = (hidden,)
-		for batch_size in batch_sizes:
-			step_input = input[input_offset:input_offset + batch_size]
-			input_offset += batch_size
-
-			dec = last_batch_size - batch_size
-			if dec > 0:
-				hiddens.append(tuple(h[-dec:] for h in hidden))
-				hidden = tuple(h[:-dec] for h in hidden)
-			last_batch_size = batch_size
-
-			if flat_hidden:
-				hidden = (inner(step_input, hidden[0], *weight),)
-			else:
-				hidden = inner(step_input, hidden, *weight)
-
-			output.append(hidden[0])
-		hiddens.append(hidden)
-		hiddens.reverse()
-
-		hidden = tuple(torch.cat(h, 0) for h in zip(*hiddens))
-		assert hidden[0].size(0) == batch_sizes[0]
-		if flat_hidden:
-			hidden = hidden[0]
-		output = torch.cat(output, 0)
-
-		return hidden, output
-
-	return forward
-
-
-def VariableRecurrentReverse(batch_sizes, inner):
-	def forward(input, hidden, weight):
-		output = []
-		input_offset = input.size(0)
-		last_batch_size = batch_sizes[-1]
-		initial_hidden = hidden
-		flat_hidden = not isinstance(hidden, tuple)
-		if flat_hidden:
-			hidden = (hidden,)
-			initial_hidden = (initial_hidden,)
-		hidden = tuple(h[:batch_sizes[-1]] for h in hidden)
-		for batch_size in reversed(batch_sizes):
-			inc = batch_size - last_batch_size
-			if inc > 0:
-				hidden = tuple(torch.cat((h, ih[last_batch_size:batch_size]), 0)
-							   for h, ih in zip(hidden, initial_hidden))
-			last_batch_size = batch_size
-			step_input = input[input_offset - batch_size:input_offset]
-			input_offset -= batch_size
-
-			if flat_hidden:
-				hidden = (inner(step_input, hidden[0], *weight),)
-			else:
-				hidden = inner(step_input, hidden, *weight)
-			output.append(hidden[0])
-
-		output.reverse()
-		output = torch.cat(output, 0)
-		if flat_hidden:
-			hidden = hidden[0]
-		return hidden, output
-
-	return forward
-
-def StackedRNN(inners, num_layers, lstm=False, dropout=0, train=True):
-
-	num_directions = len(inners)
-	total_layers = num_layers * num_directions
-
-	def forward(input, hidden, weight):
-		assert(len(weight) == total_layers)
-		next_hidden = []
-
-		if lstm:
-			hidden = list(zip(*hidden))
-
-		for i in range(num_layers):
-			all_output = []
-			for j, inner in enumerate(inners):
-				l = i * num_directions + j
-
-				hy, output = inner(input, hidden[l], weight[l])
-				next_hidden.append(hy)
-				all_output.append(output)
-
-			input = torch.cat(all_output, input.dim() - 1)
-
-			if dropout != 0 and i < num_layers - 1:
-				input = F.dropout(input, p=dropout, training=train, inplace=False)
-
-			
-
-		if lstm:
-			next_h, next_c = zip(*next_hidden)
-			next_hidden = (
-				torch.cat(next_h, 0).view(total_layers, *next_h[0].size()),
-				torch.cat(next_c, 0).view(total_layers, *next_c[0].size())
-			)
-		else:
-			next_hidden = torch.cat(next_hidden, 0).view(
-				total_layers, *next_hidden[0].size())
-
-		return next_hidden, input
-
-	return forward
-
-def LSTMCell(input, hidden, w_ih, w_hh, b_ih=None, b_hh=None):
-	"""
-	A modified LSTM cell with hard sigmoid activation on the input, forget and output gates.
-	"""
+def lstm_cell(input, hidden, w_ih, w_hh, b_ih, b_hh):
+	# type: (Tensor, Tuple[Tensor, Tensor], Tensor, Tensor, Tensor, Tensor) -> Tuple[Tensor, Tensor]
 	hx, cx = hidden
-	gates = F.linear(input, w_ih, b_ih) + F.linear(hx, w_hh, b_hh)
+	gates = torch.mm(input, w_ih.t()) + torch.mm(hx, w_hh.t()) + b_ih + b_hh
 
 	ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)
 
 	ingate = hard_sigmoid(ingate)
 	forgetgate = hard_sigmoid(forgetgate)
-	# cellgate = F.tanh(cellgate)
 	cellgate = torch.tanh(cellgate)
 	outgate = hard_sigmoid(outgate)
 
 	cy = (forgetgate * cx) + (ingate * cellgate)
-	# hy = outgate * F.tanh(cy)
 	hy = outgate * torch.tanh(cy)
 
 	return hy, cy
@@ -358,3 +251,4 @@ def hard_sigmoid(x):
 	x = F.threshold(-x, -1, -1)
 	x = F.threshold(-x, 0, 0)
 	return x
+
