@@ -232,7 +232,8 @@ class cnnblstm_with_adabn(nn.Module):
 		# update adabn running stats
 		self.update_adabn_running_stats()
 		# get output
-		output = self(test_x)
+		with torch.no_grad():
+			output = self(test_x)
 		print(output)
 		prediction = torch.max(output, 1)[1]
 		pred_y = prediction.cpu().data.numpy()
