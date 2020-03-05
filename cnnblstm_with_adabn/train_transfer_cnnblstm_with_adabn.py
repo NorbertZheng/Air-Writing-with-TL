@@ -75,7 +75,8 @@ if __name__ == '__main__':
 	else:
 		print("N_TRAINSET or N_TESTSET ERROR!")
 	# get test acc
-	avc = AverageMeter().reset()
+	avc = AverageMeter()
+	avc.reset()
 	for i in range(test_x.shape[0] // N_SET):
 		test_x_batch = test_x[(i * N_SET):((i + 1) * N_SET), :, :]
 		test_y_batch = test_y[(i * N_SET):((i + 1) * N_SET)]
@@ -94,7 +95,8 @@ if __name__ == '__main__':
 	# trainAllLayers
 	m_transfer_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, test_x = test_x, n_epoches = 20)
 	# get test acc
-	avc = AverageMeter().reset()
+	avc = AverageMeter()
+	avc.reset()
 	for i in range(test_x.shape[0] // N_SET):
 		test_x_batch = test_x[(i * N_SET):((i + 1) * N_SET), :, :]
 		test_y_batch = test_y[(i * N_SET):((i + 1) * N_SET)]

@@ -255,12 +255,12 @@ class cnnblstm_with_adabn(nn.Module):
 		# get output
 		with torch.no_grad():
 			output = parallel_cba(test_x)
-		print(output)
+		# print(output)
 		prediction = torch.max(output, 1)[1]
 		pred_y = prediction.cpu().data.numpy()
-		print(pred_y)
+		# print(pred_y)
 		target_y = test_y.cpu().data.numpy()
-		print(test_y)
+		# print(test_y)
 
 		accuracy = float((pred_y == target_y).astype(int).sum()) / float(target_y.size)
 		# print("Accuracy: ", str(accuracy))

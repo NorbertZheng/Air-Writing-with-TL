@@ -64,7 +64,8 @@ if __name__ == '__main__':
 			print(test_x.shape)
 		test_x = torch.from_numpy(test_x)
 		test_y = torch.from_numpy(test_y)
-		avc = AverageMeter().reset()
+		avc = AverageMeter()
+		avc.reset()
 		for i in range(test_x.shape[0] // N_SET):
 			test_x_batch = test_x[(i * N_SET):((i + 1) * N_SET), :, :]
 			test_y_batch = test_y[(i * N_SET):((i + 1) * N_SET)]
