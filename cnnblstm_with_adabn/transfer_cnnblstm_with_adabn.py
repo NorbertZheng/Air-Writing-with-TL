@@ -12,6 +12,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 	NET1_ADABN = "net1_adabn"
 	NET2_ADABN = "net2_adabn"
 	NET3_ADABN = "net3_adabn"
+	N_SET = 500
 
 	def __init__(self, time_steps = 800, n_features = 3, n_outputs = 10, use_cuda = False, params_dir = "./params", transfer_params_dir = "./transfer_params"):
 		super(transfer_cnnblstm_with_adabn, self).__init__()
@@ -84,11 +85,10 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		# unsespected data flow
 		if test_x != None:
 			print("unsespected data flow begin!")
-			with torch.no_grad():
-				if self.use_cuda:
-					test_x = Variable(test_x).cuda()
-				else:
-					test_x = Variable(test_x)
+			if self.use_cuda:
+				test_x = Variable(test_x).cuda()
+			else:
+				test_x = Variable(test_x)
 			for epoch in range(n_epoches):
 				# get hidden
 				self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
@@ -168,11 +168,10 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		else:
 			parallel_cba = self
 		# cuda test_data
-		with torch.no_grad():
-			if self.use_cuda:
-				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
-			else:
-				test_x, test_y = Variable(test_x), Variable(test_y)
+		if self.use_cuda:
+			test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
+		else:
+			test_x, test_y = Variable(test_x), Variable(test_y)
 		# get hidden
 		self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
 		# update adabn running stats
