@@ -1,7 +1,7 @@
 #!/bin/sh
 # unsuspected
-# rm -rf ./params_horizon2vertical_un_PCA
-# python train_cnnblstm_with_adabn.py train ../dataset/horizon/ ./params_horizon2vertical_un_PCA true true
+rm -rf ./params_horizon2vertical_un_PCA
+python train_cnnblstm_with_adabn.py train ../dataset/horizon/ ./params_horizon2vertical_un_PCA true true
 python train_cnnblstm_with_adabn.py test ../dataset/vertical/ ./params_horizon2vertical_un_PCA true true
 # semi-suspected
 rm -rf ./transfer_params_horizon2vertical_100_semi
