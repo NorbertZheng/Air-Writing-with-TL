@@ -263,7 +263,8 @@ class cnnblstm_with_adabn(nn.Module):
 		print(test_y)
 
 		accuracy = float((pred_y == target_y).astype(int).sum()) / float(target_y.size)
-		print("Accuracy: ", str(accuracy))
+		# print("Accuracy: ", str(accuracy))
+		return accuracy
 
 	def save_params(self):
 		"""

@@ -3,12 +3,15 @@ import numpy as np
 # local class
 import sys
 sys.path.append("..")
+sys.path.append("../deepCoral")
 import tools
+from utils import AverageMeter
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 
 # enable_PCA = True
 # TRAIN_PATH = r"../dataset/train"
 # TEST_PATH = r"../dataset/test"
+N_SET = 500
 
 """
 usage:
@@ -61,8 +64,22 @@ if __name__ == '__main__':
 			print(test_x.shape)
 		test_x = torch.from_numpy(test_x)
 		test_y = torch.from_numpy(test_y)
-		# get test accuracy
-		m_cnnblstm_with_adabn.getTestAccuracy(test_x, test_y)
+		avc = AverageMeter().reset()
+		for i in range(test_x.shape[0] // N_SET):
+			test_x_batch = test_x[(i * N_SET):((i + 1) * N_SET), :, :]
+			test_y_batch = test_y[(i * N_SET):((i + 1) * N_SET)]
+			# get test accuracy
+			acc_batch = m_cnnblstm_with_adabn.getTestAccuracy(test_x_batch, test_y_batch)
+			avc.update(acc_batch, n = N_SET)
+		if test_x.shape[0] % N_SET == 0:
+			print("Accuracy: ", str(avc.avg))
+		else:
+			test_x_batch = test_x[-(test_x.shape[0] % N_SET):, :, :]
+			test_y_batch = test_y[-(test_x.shape[0] % N_SET):]
+			# get test accuracy
+			acc_batch = m_cnnblstm_with_adabn.getTestAccuracy(test_x_batch, test_y_batch)
+			avc.update(acc_batch, n = (test_x.shape[0] % N_SET))
+			print("Accuracy: ", str(avc.avg))
 	else:
 		print("CMD ERROR!")
 

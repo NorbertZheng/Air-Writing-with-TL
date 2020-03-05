@@ -3,8 +3,10 @@ import numpy as np
 # local class
 import sys
 sys.path.append("..")
+sys.path.append("../deepCoral")
 import tools
 import tools_6dmg
+from utils import AverageMeter
 from transfer_cnnblstm_with_adabn import transfer_cnnblstm_with_adabn
 
 # N_TRAINSET = 0
@@ -72,10 +74,40 @@ if __name__ == '__main__':
 		print(test_x.shape, test_y.shape)
 	else:
 		print("N_TRAINSET or N_TESTSET ERROR!")
-	# get test accuracy
-	m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x, test_y)
+	# get test acc
+	avc = AverageMeter().reset()
+	for i in range(test_x.shape[0] // N_SET):
+		test_x_batch = test_x[(i * N_SET):((i + 1) * N_SET), :, :]
+		test_y_batch = test_y[(i * N_SET):((i + 1) * N_SET)]
+		# get test accuracy
+		acc_batch = m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x_batch, test_y_batch)
+		avc.update(acc_batch, n = N_SET)
+	if test_x.shape[0] % N_SET == 0:
+		print("Accuracy: ", str(avc.avg))
+	else:
+		test_x_batch = test_x[-(test_x.shape[0] % N_SET):, :, :]
+		test_y_batch = test_y[-(test_x.shape[0] % N_SET):]
+		# get test accuracy
+		acc_batch = m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x_batch, test_y_batch)
+		avc.update(acc_batch, n = (test_x.shape[0] % N_SET))
+		print("Accuracy: ", str(avc.avg))
 	# trainAllLayers
 	m_transfer_cnnblstm_with_adabn.trainAllLayers(train_x, train_y, test_x = test_x, n_epoches = 20)
-	# get test accuracy
-	m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x, test_y)
+	# get test acc
+	avc = AverageMeter().reset()
+	for i in range(test_x.shape[0] // N_SET):
+		test_x_batch = test_x[(i * N_SET):((i + 1) * N_SET), :, :]
+		test_y_batch = test_y[(i * N_SET):((i + 1) * N_SET)]
+		# get test accuracy
+		acc_batch = m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x_batch, test_y_batch)
+		avc.update(acc_batch, n = N_SET)
+	if test_x.shape[0] % N_SET == 0:
+		print("Accuracy: ", str(avc.avg))
+	else:
+		test_x_batch = test_x[-(test_x.shape[0] % N_SET):, :, :]
+		test_y_batch = test_y[-(test_x.shape[0] % N_SET):]
+		# get test accuracy
+		acc_batch = m_transfer_cnnblstm_with_adabn.getTestAccuracy(test_x_batch, test_y_batch)
+		avc.update(acc_batch, n = (test_x.shape[0] % N_SET))
+		print("Accuracy: ", str(avc.avg))
 
