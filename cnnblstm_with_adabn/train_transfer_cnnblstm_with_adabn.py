@@ -11,6 +11,7 @@ from transfer_cnnblstm_with_adabn import transfer_cnnblstm_with_adabn
 
 # N_TRAINSET = 0
 # TRANSFER_PATH = r"../dataset/transfer"
+N_SET = 500
 
 """
 usage:
