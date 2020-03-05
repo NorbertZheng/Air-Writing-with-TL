@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 # local class
 import sys
 sys.path.append("../network")
-import PCA as mPCA
+# import PCA as mPCA
 from sklearn.decomposition import PCA
 
 def getAllData(path, if_quiet = 0):

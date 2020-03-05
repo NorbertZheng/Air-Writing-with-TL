@@ -1,5 +1,7 @@
+import os
 import torch
 from torch import nn
+from torch.autograd import Variable
 
 class deepAE(nn.Module):
 
@@ -39,10 +41,25 @@ class deepAE(nn.Module):
 		)
 
 	def init_weights(self):
-		for name, params in net.named_parameters():
-			print(name, params)
+		# get weight set
+		encoder_weights = ((name, params.data) for name, params in self.named_parameters() if (("encoder" in name) and ("weight" in name)))
+		encoder_biases = ((name, params.data) for name, params in self.named_parameters() if (("encoder" in name) and ("bias" in name)))
+		decoder_weights = ((name, params.data) for name, params in self.named_parameters() if (("decoder" in name) and ("weight" in name)))
+		decoder_biases = ((name, params.data) for name, params in self.named_parameters() if (("decoder" in name) and ("bias" in name)))
+		for name, params_data in encoder_weights:
+			# print(name)
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in decoder_weights:
+			# print(name)
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in encoder_biases:
+			# print(name)
+			nn.init.constant_(params_data, 0)
+		for name, params_data in decoder_biases:
+			# print(name)
+			nn.init.constant_(params_data, 0)
 
-	def forward(self.input):
+	def forward(self, input):
 		input = input.permute(0, 2, 1).contiguous()		# (batch, 800, 3)
 		input = input.view(input.shape[0], -1)
 		encode_output = self.encoder(input)
@@ -51,7 +68,7 @@ class deepAE(nn.Module):
 		output = output.permute(0, 2, 1).contiguous()	# (batch, 3, 800)
 		return output
 
-	def train(self, src_x, target_x, learning_rate = 0.01, n_epoches = 10, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, src_x, target_x, learning_rate = 0.01, n_epoches = 10, batch_size = 20, shuffle = True, pre_trained = False):
 		# optimize all cnn parameters
 		optimizer = torch.optim.Adam(self.parameters(), lr = learning_rate)
 		# the target label is not one-hotted
@@ -61,7 +78,8 @@ class deepAE(nn.Module):
 		self.init_weights()
 
 		# load params
-		self.load_params()
+		if pre_trained:
+			self.load_params()
 
 		# set train mode True
 		self.train()
@@ -72,7 +90,7 @@ class deepAE(nn.Module):
 			target_y = target_y.cuda()
 
 		# get train_data
-		train_data = torch.utils.data.TensorDataset(src_x, target_y)
+		train_data = torch.utils.data.TensorDataset(src_x, target_x)
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 
@@ -87,9 +105,9 @@ class deepAE(nn.Module):
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
 				# get output
-				output = self(b_x)									# CNN_BLSTM output
+				output = self(b_x)									# AE output
 				# get loss
-				loss = loss_func(output, b_y)						# cross entropy loss
+				loss = loss_func(output, b_y)						# MSE loss
 				train_loss += loss.item() * len(b_y)
 				# backward
 				optimizer.zero_grad()								# clear gradients for this training step
@@ -97,7 +115,7 @@ class deepAE(nn.Module):
 				optimizer.step()									# apply gradients
 
 				# print loss
-				if (step + 1) % 10 == 0:
+				if (step + 1) % 1 == 0:
 					print("[{}/{}], train loss is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size)))
 
 			# save params
@@ -116,7 +134,7 @@ class deepAE(nn.Module):
 		"""
 		load params & adabn's inner stats
 		"""
-		if os.path.exists(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE)):
+		if os.path.exists(self.params_pkl):
 			if self.use_cuda:
 				self.load_state_dict(torch.load(self.params_pkl, map_location = torch.device('cuda')))
 			else:
@@ -130,10 +148,12 @@ class deepAE(nn.Module):
 		if pre_trained:
 			self.load_params()
 		else:
-			self.train(src_x, target_x)
+			self.trainAllLayers(src_x, target_x, pre_trained = False)
 		return self
 
 if __name__ == "__main__":
+	torch.manual_seed(1)
+
 	import sys
 	sys.path.append("../..")
 	import tools
@@ -149,4 +169,4 @@ if __name__ == "__main__":
 		deep_ae = deepAE(use_cuda = use_cuda)
 	train_x = torch.from_numpy(train_x)
 	# train
-	deep_ae.train(train_x, train_x)
+	deep_ae.get_model(train_x, train_x)
