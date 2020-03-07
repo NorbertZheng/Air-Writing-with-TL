@@ -11,9 +11,12 @@ sys.path.append("../network")
 import Coral
 from lstm import LSTMHardSigmoid
 from AdaBN import AdaBN
+sys.path.append("../network/AutoEncoder")
+import AutoEncoder
 
 class cnnblstm_with_adabn(nn.Module):
 	PARAMS_FILE = "params.pkl"
+	PARAMS_AE = "params_ae.pkl"
 	NET1_ADABN = "net1_adabn"
 	NET2_ADABN = "net2_adabn"
 	NET3_ADABN = "net3_adabn"
@@ -35,6 +38,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.n_layers = 1
 		self.bidirectional = True
 
+		self.ae = AutoEncoder.load_AE(type = "ConvAE", time_steps = self.time_steps, n_features = self.n_features, use_cuda = self.use_cuda, params_pkl = os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_AE)):
 
 		# build net1 cnn
 		self.net1 = nn.Sequential(
@@ -97,20 +101,55 @@ class cnnblstm_with_adabn(nn.Module):
 		temp useless
 		Here we reproduce Keras default initialization weights for consistency with Keras version
 		"""
-		ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
-		hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
-		b = (param.data for name, param in self.named_parameters() if 'bias' in name)
-		for t in ih:
-			nn.init.xavier_uniform_(t)
-		for t in hh:
-			nn.init.orthogonal_(t)
-		for t in b:
-			nn.init.constant_(t, 0)
+		# get weights & bias set
+		net1_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net1" in name)))
+		net1_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net1" in name)))
+		net1_adabn_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net1_adabn" in name)))
+		net1_adabn_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net1_adabn" in name)))
+		# net2_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net2" in name)))
+		# net2_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net2" in name)))
+		net2_adabn_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net2_adabn" in name)))
+		net2_adabn_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net2_adabn" in name)))
+		net3_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net3" in name)))
+		net3_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net3" in name)))
+		net3_adabn_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net3_adabn" in name)))
+		net3_adabn_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net3_adabn" in name)))
+		net4_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net4" in name)))
+		net4_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net4" in name)))
+		# init weights & bias
+		self.ae.init_weights()
+		for name, params_data in net1_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net1_biases:
+			nn.init.constant_(params_data, 0)
+		for name, params_data in net1_adabn_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net1_adabn_biases:
+			nn.init.constant_(params_data, 0)
+		self.net2.init_weights()		# lstm init weights
+		for name, params_data in net2_adabn_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net2_adabn_biases:
+			nn.init.constant_(params_data, 0)
+		for name, params_data in net3_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net3_biases:
+			nn.init.constant_(params_data, 0)
+		for name, params_data in net3_adabn_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net3_adabn_biases:
+			nn.init.constant_(params_data, 0)
+		for name, params_data in net4_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net4_biases:
+			nn.init.constant_(params_data, 0)
 
 	def forward(self, input):
 		"""
 		compute the output of input according to the entire network model
 		"""
+		# AutoEncoder
+		input = self.ae(input)
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
 		# maxPool1d_adabn_output = maxPool1d_output
@@ -155,7 +194,10 @@ class cnnblstm_with_adabn(nn.Module):
 		# review train_x
 		train_x = train_x.view(-1, self.n_features, self.time_steps)
 		# optimize all cnn parameters
-		optimizer = torch.optim.Adam(self.parameters(), lr = learning_rate)
+		params = [{"params": model.parameters()} for model in self.m_cnnblstm_with_adabn.children() if model  not in [self.ae]]
+		for param in params:
+			print(param)
+		optimizer = torch.optim.Adam(params, lr = learning_rate)
 		# the target label is not one-hotted
 		loss_func = nn.CrossEntropyLoss()
 
@@ -179,6 +221,10 @@ class cnnblstm_with_adabn(nn.Module):
 		if self.use_cuda:
 			train_x = train_x.cuda()
 			train_y = train_y.cuda()
+
+		# get autoencoder
+		self.ae = AutoEncoder.train_AE(self.ae, train_x, train_x)
+		self.ae.save_params()
  
 		# get train_data
 		train_data = torch.utils.data.TensorDataset(train_x, train_y)
@@ -271,6 +317,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		self.save_adabn_variables()
 		torch.save(self.state_dict(), os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE))
+		self.ae.save_params()
 		print("save_params success!")
 
 	def save_adabn_variables(self):
@@ -292,6 +339,7 @@ class cnnblstm_with_adabn(nn.Module):
 			else:
 				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
 			print("load_params success!")
+		self.ae.load_params()
 
 	def load_adabn_variables(self):
 		"""

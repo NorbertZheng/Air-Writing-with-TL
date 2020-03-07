@@ -91,7 +91,7 @@ class ConvAE(nn.Module):
 		output = decode_output
 		return output
 
-	def trainAllLayers(self, src_x, target_x, learning_rate = 0.01, n_epoches = 10, batch_size = 20, shuffle = True, pre_trained = False):
+	def trainAllLayers(self, src_x, target_x, learning_rate = 0.01, n_epoches = 10, batch_size = 20, shuffle = True):
 		# optimize all cnn parameters
 		optimizer = torch.optim.Adam(self.parameters(), lr = learning_rate)
 		# the target label is not one-hotted
@@ -101,8 +101,7 @@ class ConvAE(nn.Module):
 		self.init_weights()
 
 		# load params
-		if pre_trained:
-			self.load_params()
+		self.load_params()
 
 		# set train mode True
 		self.train()

@@ -170,7 +170,7 @@ class SeqAE(nn.Module):
 				self.load_state_dict(torch.load(self.params_pkl, map_location = torch.device('cpu')))
 			print("load_params success!")
 
-	def get_model(self, src_x, target_x, pre_trained = False):
+	def get_model(self, src_x = None, target_x = None, pre_trained = False):
 		"""
 		get pretrained model
 		"""
