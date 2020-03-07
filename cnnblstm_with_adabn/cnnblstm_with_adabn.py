@@ -184,7 +184,6 @@ class cnnblstm_with_adabn(nn.Module):
 		train_data = torch.utils.data.TensorDataset(train_x, train_y)
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
-		
 
 		# training and testing
 		for epoch in range(n_epoches):
