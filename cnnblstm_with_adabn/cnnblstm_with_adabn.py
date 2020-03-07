@@ -167,6 +167,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		train all layers of network model
 		"""
+		print(os.environ["CUDA_VISIBLE_DEVICES"])
 		# CORAL
 		if self.enable_CORAL:
 			if test_x == None:
@@ -195,11 +196,9 @@ class cnnblstm_with_adabn(nn.Module):
 		self.train()
 
 		# get parallel model
-		if torch.cuda.device_count() > 1:
+		if self.use_cuda:
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
-			parallel_cba = parallel_cba.cuda()
-		else:
-			parallel_cba = self
+			# parallel_cba = parallel_cba.cuda()
 
 		# if use_cuda
 		if self.use_cuda:
@@ -268,12 +267,11 @@ class cnnblstm_with_adabn(nn.Module):
 		# set eval
 		self.eval()
 
+		
 		# get parallel model
-		if torch.cuda.device_count() > 1:
+		if self.use_cuda:
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
-			parallel_cba = parallel_cba.cuda()
-		else:
-			parallel_cba = self
+			# parallel_cba = parallel_cba.cuda()
 		# cuda test_data
 		with torch.no_grad():
 			if self.use_cuda:
