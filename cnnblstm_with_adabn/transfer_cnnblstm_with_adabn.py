@@ -35,6 +35,9 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.bidirectional = True
 
 		self.m_cnnblstm_with_adabn = cnnblstm_with_adabn(time_steps = self.time_steps, n_features = self.n_features, n_outputs = self.n_outputs, use_cuda = self.use_cuda, params_dir = params_dir).get_model(pre_trained = True)
+		# re-initial AE layer
+		# self.m_cnnblstm_with_adabn.ae = AutoEncoder.load_AE(type = "ConvAE", time_steps = self.time_steps, n_features = self.n_features, use_cuda = self.use_cuda, params_pkl = os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_AE))
+		# self.m_cnnblstm_with_adabn.ae.reset_parameters()
 		# re-initial all adabn layers
 		"""
 		self.m_cnnblstm_with_adabn.net1_adabn = AdaBN(self.n_filters, variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET1_ADABN), use_cuda = self.use_cuda)
