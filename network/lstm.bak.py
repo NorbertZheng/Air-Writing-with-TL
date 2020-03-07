@@ -152,65 +152,58 @@ class LSTMHardSigmoid(Module):
 	def all_weights(self):
 		return [[getattr(self, weight) for weight in weights] for weights in self._all_weights]
 
-class AutogradRNN(nn.Module):
-
-	def __init__(self, input_size, hidden_size, num_layers=1, batch_first=False,
+def AutogradRNN(input_size, hidden_size, num_layers=1, batch_first=False,
 				dropout=0, train=True, bidirectional=False, batch_sizes=None,
 				dropout_state=None, flat_weight=None):
-		super(AutogradRNN, self).__init__()
-		self.input_size = input_size
-		self.hidden_size = hidden_size
-		self.num_layers = num_layers
-		self.batch_first = batch_first
-		self.dropout = dropout
-		self.train = train
-		self.bidirectional = bidirectional
-		self.batch_sizes = batch_sizes
-		self.dropout_state = dropout_state
-		self.flat_weight = flat_weight
 
-		self.cell = LSTMCell
-		if self.batch_sizes is None:
-			self.rec_factory = Recurrent
-		else:
-			self.rec_factory = variable_recurrent_factory(batch_sizes)
-		if self.bidirectional:
-			self.layer = (self.rec_factory(cell), self.rec_factory(cell, reverse = True))
-		else:
-			self.layer = (self.rec_factory(cell),)
-		self.func = StackedRNN(self.layer, self.num_layers, True, dropout = self.dropout, train = self.train)
+	cell = LSTMCell
 
-	def forward(self, input, weight, hidden):
-		if self.batch_first and self.batch_sizes is None:
+	if batch_sizes is None:
+		rec_factory = Recurrent
+	else:
+		rec_factory = variable_recurrent_factory(batch_sizes)
+
+	if bidirectional:
+		layer = (rec_factory(cell), rec_factory(cell, reverse=True))
+	else:
+		layer = (rec_factory(cell),)
+
+	func = StackedRNN(layer,
+					  num_layers,
+					  True,
+					  dropout=dropout,
+					  train=train)
+
+	def forward(input, weight, hidden):
+		if batch_first and batch_sizes is None:
 			input = input.transpose(0, 1)
 
-		nexth, output = self.func(input, hidden, weight)
+		nexth, output = func(input, hidden, weight)
 
 		if batch_first and batch_sizes is None:
 			output = output.transpose(0, 1)
 
 		return output, nexth
 
-def Recurrent(nn.Module):
+	return forward
 
-	def __init__(self, inner, reverse = False):
-		super(Recurrent, self).__init__()
-		self.inner = inner
-		self.reverse = reverse
-
-	def forward(self, input, hidden, weight):
+def Recurrent(inner, reverse=False):
+	def forward(input, hidden, weight):
 		output = []
-		steps = range(input.size(0) - 1, -1, -1) if self.reverse else range(input.size(0))
+		steps = range(input.size(0) - 1, -1, -1) if reverse else range(input.size(0))
 		for i in steps:
-			hidden = self.inner(input[i], hidden, *weight)
+			hidden = inner(input[i], hidden, *weight)
 			# hack to handle LSTM
 			output.append(hidden[0] if isinstance(hidden, tuple) else hidden)
 
-		if self.reverse:
+		if reverse:
 			output.reverse()
 		output = torch.cat(output, 0).view(input.size(0), *output[0].size())
 
 		return hidden, output
+
+	return forward
+
 
 def variable_recurrent_factory(batch_sizes):
 	def fac(inner, reverse=False):
@@ -220,22 +213,16 @@ def variable_recurrent_factory(batch_sizes):
 			return VariableRecurrent(batch_sizes, inner)
 	return fac
 
-class VariableRecurrent(nn.Module):
-
-	def __init__(self, batch_sizes, inner):
-		super(VariableRecurrent, self).__init__()
-		self.batch_sizes = batch_sizes
-		self.inner = inner
-
-	def forward(self, input, hidden, weight):
+def VariableRecurrent(batch_sizes, inner):
+	def forward(input, hidden, weight):
 		output = []
 		input_offset = 0
-		last_batch_size = self.batch_sizes[0]
+		last_batch_size = batch_sizes[0]
 		hiddens = []
 		flat_hidden = not isinstance(hidden, tuple)
 		if flat_hidden:
 			hidden = (hidden,)
-		for batch_size in self.batch_sizes:
+		for batch_size in batch_sizes:
 			step_input = input[input_offset:input_offset + batch_size]
 			input_offset += batch_size
 
@@ -246,40 +233,37 @@ class VariableRecurrent(nn.Module):
 			last_batch_size = batch_size
 
 			if flat_hidden:
-				hidden = (self.inner(step_input, hidden[0], *weight),)
+				hidden = (inner(step_input, hidden[0], *weight),)
 			else:
-				hidden = self.inner(step_input, hidden, *weight)
+				hidden = inner(step_input, hidden, *weight)
 
 			output.append(hidden[0])
 		hiddens.append(hidden)
 		hiddens.reverse()
 
 		hidden = tuple(torch.cat(h, 0) for h in zip(*hiddens))
-		assert hidden[0].size(0) == self.batch_sizes[0]
+		assert hidden[0].size(0) == batch_sizes[0]
 		if flat_hidden:
 			hidden = hidden[0]
 		output = torch.cat(output, 0)
 
 		return hidden, output
 
-class VariableRecurrentReverse
+	return forward
 
-	def __init__(self, batch_sizes, inner):
-		super(, self).__init__()
-		self.batch_sizes = batch_sizes
-		self.inner = inner
 
-	def forward(self, input, hidden, weight):
+def VariableRecurrentReverse(batch_sizes, inner):
+	def forward(input, hidden, weight):
 		output = []
 		input_offset = input.size(0)
-		last_batch_size = self.batch_sizes[-1]
+		last_batch_size = batch_sizes[-1]
 		initial_hidden = hidden
 		flat_hidden = not isinstance(hidden, tuple)
 		if flat_hidden:
 			hidden = (hidden,)
 			initial_hidden = (initial_hidden,)
-		hidden = tuple(h[:self.batch_sizes[-1]] for h in hidden)
-		for batch_size in reversed(self.batch_sizes):
+		hidden = tuple(h[:batch_sizes[-1]] for h in hidden)
+		for batch_size in reversed(batch_sizes):
 			inc = batch_size - last_batch_size
 			if inc > 0:
 				hidden = tuple(torch.cat((h, ih[last_batch_size:batch_size]), 0)
@@ -289,9 +273,9 @@ class VariableRecurrentReverse
 			input_offset -= batch_size
 
 			if flat_hidden:
-				hidden = (self.inner(step_input, hidden[0], *weight),)
+				hidden = (inner(step_input, hidden[0], *weight),)
 			else:
-				hidden = self.inner(step_input, hidden, *weight)
+				hidden = inner(step_input, hidden, *weight)
 			output.append(hidden[0])
 
 		output.reverse()
@@ -300,30 +284,24 @@ class VariableRecurrentReverse
 			hidden = hidden[0]
 		return hidden, output
 
-class StackedRNN(nn.Module):
+	return forward
 
-	def __init__(self, inners, num_layers, lstm = False, dropout = 0, train = True):
-		super(StackedRnn, self).__init__()
-		self.inners = inners
-		self.num_layers = num_layers
-		self.lstm = lstm
-		self.dropout = dropout
-		self.train = train
+def StackedRNN(inners, num_layers, lstm=False, dropout=0, train=True):
 
-		self.num_directions = len(self.inners)
-		self.total_layers = self.num_layers * self.num_directions
+	num_directions = len(inners)
+	total_layers = num_layers * num_directions
 
-	def forward(self, input, hidden, weight):
-		assert(len(weight) == self.total_layers)
+	def forward(input, hidden, weight):
+		assert(len(weight) == total_layers)
 		next_hidden = []
 
-		if self.lstm:
+		if lstm:
 			hidden = list(zip(*hidden))
 
-		for i in range(self.num_layers):
+		for i in range(num_layers):
 			all_output = []
-			for j, inner in enumerate(self.inners):
-				l = i * self.num_directions + j
+			for j, inner in enumerate(inners):
+				l = i * num_directions + j
 
 				hy, output = inner(input, hidden[l], weight[l])
 				next_hidden.append(hy)
@@ -331,19 +309,24 @@ class StackedRNN(nn.Module):
 
 			input = torch.cat(all_output, input.dim() - 1)
 
-			if self.dropout != 0 and i < self.num_layers - 1:
-				input = F.dropout(input, p = self.dropout, training = self.train, inplace = False)
+			if dropout != 0 and i < num_layers - 1:
+				input = F.dropout(input, p=dropout, training=train, inplace=False)
 
-		if self.lstm:
+			
+
+		if lstm:
 			next_h, next_c = zip(*next_hidden)
 			next_hidden = (
-				torch.cat(next_h, 0).view(self.total_layers, *next_h[0].size()),
-				torch.cat(next_c, 0).view(self.total_layers, *next_c[0].size())
+				torch.cat(next_h, 0).view(total_layers, *next_h[0].size()),
+				torch.cat(next_c, 0).view(total_layers, *next_c[0].size())
 			)
 		else:
-			next_hidden = torch.cat(next_hidden, 0).view(self.total_layers, *next_hidden[0].size())
+			next_hidden = torch.cat(next_hidden, 0).view(
+				total_layers, *next_hidden[0].size())
 
 		return next_hidden, input
+
+	return forward
 
 def LSTMCell(input, hidden, w_ih, w_hh, b_ih=None, b_hh=None):
 	"""
