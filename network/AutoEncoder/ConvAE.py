@@ -28,17 +28,17 @@ class ConvAE(nn.Module):
 	def _build_net(self):
 		self.encoder = nn.Sequential(
 			# (batch, 3, 800)
-			nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters1, kernel_size = self.kernel_size1, padding = self.kernel_size1 - 1),
+			nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters1, kernel_size = self.kernel_size1, padding = self.kernel_size1 // 2),
 			# (batch, 6, 800)
 			nn.ReLU(True),
 			nn.MaxPool1d(kernel_size = self.scale_factor1, stride = self.scale_factor1),
 			# (batch, 6, 400)
-			nn.Conv1d(in_channels = self.n_filters1, out_channels = self.n_filters2, kernel_size = self.kernel_size2, padding = self.kernel_size2 - 1),
+			nn.Conv1d(in_channels = self.n_filters1, out_channels = self.n_filters2, kernel_size = self.kernel_size2, padding = self.kernel_size2 // 2),
 			# (batch, 12, 400)
 			nn.ReLU(True),
 			nn.MaxPool1d(kernel_size = self.scale_factor2, stride = self.scale_factor2),
 			# (batch, 12, 200)
-			nn.Conv1d(in_channels = self.n_filters2, out_channels = self.n_filters3, kernel_size = self.kernel_size3, padding = self.kernel_size3 - 1),
+			nn.Conv1d(in_channels = self.n_filters2, out_channels = self.n_filters3, kernel_size = self.kernel_size3, padding = self.kernel_size3 // 2),
 			# (batch, 24, 200)
 			nn.ReLU(True),
 			nn.MaxPool1d(kernel_size = self.scale_factor3, stride = self.scale_factor3),
@@ -49,30 +49,45 @@ class ConvAE(nn.Module):
 			# (batch, 24, 100)
 			nn.Upsample(scale_factor = self.scale_factor3, mode = 'nearest'),
 			# (batch, 24, 200)
-			nn.Conv1d(in_channels = self.n_filters3, out_channels = self.n_filters2, kernel_size = self.kernel_size3, padding = self.kernel_size3 - 1),
+			nn.Conv1d(in_channels = self.n_filters3, out_channels = self.n_filters2, kernel_size = self.kernel_size3, padding = self.kernel_size3 // 2),
 			nn.ReLU(True),
 			# (batch, 12, 200)
 			nn.Upsample(scale_factor = self.scale_factor2, mode = 'nearest'),
 			# (batch, 12, 400)
-			nn.Conv1d(in_channels = self.n_filters2, out_channels = self.n_filters1, kernel_size = self.kernel_size2, padding = self.kernel_size2 - 1),
+			nn.Conv1d(in_channels = self.n_filters2, out_channels = self.n_filters1, kernel_size = self.kernel_size2, padding = self.kernel_size2 // 2),
 			nn.ReLU(True),
 			# (batch, 6, 400)
 			nn.Upsample(scale_factor = self.scale_factor1, mode = 'nearest'),
 			# (batch, 6, 800)
-			nn.Conv1d(in_channels = self.n_filters1, out_channels = self.n_features, kernel_size = self.kernel_size1, padding = self.kernel_size1 - 1),
+			nn.Conv1d(in_channels = self.n_filters1, out_channels = self.n_features, kernel_size = self.kernel_size1, padding = self.kernel_size1 // 2),
 			nn.ReLU(True),
 			# (batch, 3, 800)
 		)
 
 	def init_weights(self):
 		# get weight set
-		# encoder_weights = ((name, params.data) for name, params in self.named_parameters() if (("encoder" in name) and ("weight" in name)))
-		for name, params in self.named_parameters():
-			print(name, params)
+		encoder_weights = ((name, params.data) for name, params in self.named_parameters() if (("encoder" in name) and ("weight" in name)))
+		encoder_biases = ((name, params.data) for name, params in self.named_parameters() if (("encoder" in name) and ("bias" in name)))
+		decoder_weights = ((name, params.data) for name, params in self.named_parameters() if (("decoder" in name) and ("weight" in name)))
+		decoder_biases = ((name, params.data) for name, params in self.named_parameters() if (("decoder" in name) and ("bias" in name)))
+		for name, params_data in encoder_weights:
+			# print(name)
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in decoder_weights:
+			# print(name)
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in encoder_biases:
+			# print(name)
+			nn.init.constant_(params_data, 0)
+		for name, params_data in decoder_biases:
+			# print(name)
+			nn.init.constant_(params_data, 0)
 
 	def forward(self, input):
 		encode_output = self.encoder(input)
+		# print(encode_output.shape)
 		decode_output, encode_output = self.decoder(encode_output), None
+		# print(decode_output.shape)
 		output = decode_output
 		return output
 
