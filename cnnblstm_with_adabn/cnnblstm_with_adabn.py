@@ -134,6 +134,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		compute the output of input according to the entire network model
 		"""
+		print(input.shape)
 		# AutoEncoder
 		input = self.ae(input)
 		# MaxPool1d
