@@ -152,7 +152,7 @@ class LSTMHardSigmoid(Module):
 	def all_weights(self):
 		return [[getattr(self, weight) for weight in weights] for weights in self._all_weights]
 
-class AutogradRNN(nn.Module):
+class AutogradRNN(Module):
 
 	def __init__(self, input_size, hidden_size, num_layers=1, batch_first=False,
 				dropout=0, train=True, bidirectional=False, batch_sizes=None,
@@ -175,9 +175,9 @@ class AutogradRNN(nn.Module):
 		else:
 			self.rec_factory = variable_recurrent_factory(batch_sizes)
 		if self.bidirectional:
-			self.layer = (self.rec_factory(cell), self.rec_factory(cell, reverse = True))
+			self.layer = (self.rec_factory(self.cell), self.rec_factory(self.cell, reverse = True))
 		else:
-			self.layer = (self.rec_factory(cell),)
+			self.layer = (self.rec_factory(self.cell),)
 		self.func = StackedRNN(self.layer, self.num_layers, True, dropout = self.dropout, train = self.train)
 
 	def forward(self, input, weight, hidden):
@@ -186,12 +186,12 @@ class AutogradRNN(nn.Module):
 
 		nexth, output = self.func(input, hidden, weight)
 
-		if batch_first and batch_sizes is None:
+		if self.batch_first and self.batch_sizes is None:
 			output = output.transpose(0, 1)
 
 		return output, nexth
 
-def Recurrent(nn.Module):
+class Recurrent(Module):
 
 	def __init__(self, inner, reverse = False):
 		super(Recurrent, self).__init__()
@@ -220,7 +220,7 @@ def variable_recurrent_factory(batch_sizes):
 			return VariableRecurrent(batch_sizes, inner)
 	return fac
 
-class VariableRecurrent(nn.Module):
+class VariableRecurrent(Module):
 
 	def __init__(self, batch_sizes, inner):
 		super(VariableRecurrent, self).__init__()
@@ -262,10 +262,10 @@ class VariableRecurrent(nn.Module):
 
 		return hidden, output
 
-class VariableRecurrentReverse
+class VariableRecurrentReverse(Module):
 
 	def __init__(self, batch_sizes, inner):
-		super(, self).__init__()
+		super(VariableRecurrentReverse, self).__init__()
 		self.batch_sizes = batch_sizes
 		self.inner = inner
 
@@ -300,10 +300,10 @@ class VariableRecurrentReverse
 			hidden = hidden[0]
 		return hidden, output
 
-class StackedRNN(nn.Module):
+class StackedRNN(Module):
 
 	def __init__(self, inners, num_layers, lstm = False, dropout = 0, train = True):
-		super(StackedRnn, self).__init__()
+		super(StackedRNN, self).__init__()
 		self.inners = inners
 		self.num_layers = num_layers
 		self.lstm = lstm
