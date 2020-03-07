@@ -10,7 +10,7 @@ from lstm import LSTMHardSigmoid
 
 class SeqAE(nn.Module):
 
-	def __init__(self, time_steps = 800, n_features = 3, use_cuda = False, params_pkl = "./params_deepAE.pkl"):
+	def __init__(self, time_steps = 800, n_features = 3, use_cuda = False, params_pkl = "./params_SeqAE.pkl"):
 		super(SeqAE, self).__init__()
 
 		self.time_steps = time_steps
@@ -76,7 +76,7 @@ class SeqAE(nn.Module):
 		# (batch, 3, 800)
 		input = input.permute(0, 2, 1)
 		# (batch, 800, 3)
-		encode_output = self.encoder(input, self.encoder_hidden)
+		(encode_output, self.encoder_hidden) = self.encoder(input, self.encoder_hidden)
 		print(encode_output.shape)
 		# (batch, 800, 200)
 		# MaxPooling1D time_steps
@@ -88,7 +88,7 @@ class SeqAE(nn.Module):
 		# (batch, 1, 200)
 		maxPooling_output = maxPooling_output.repeat(1, self.time_steps, 1)
 		# (batch, 800, 200)
-		decode_output, maxPooling_output = self.decoder(maxPooling_output, self.decoder_hidden), None
+		(decode_output, self.decoder_hidden), maxPooling_output = self.decoder(maxPooling_output, self.decoder_hidden), None
 		print(decode_output.shape)
 		# (batch, 800, 3)
 		output, decode_output = decode_output.permute(0, 2, 1), None

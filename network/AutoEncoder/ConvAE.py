@@ -5,7 +5,7 @@ from torch.autograd import Variable
 
 class ConvAE(nn.Module):
 
-	def __init__(self, time_steps = 800, n_features = 3, use_cuda = False, params_pkl = "./params_deepAE.pkl"):
+	def __init__(self, time_steps = 800, n_features = 3, use_cuda = False, params_pkl = "./params_ConvAE.pkl"):
 		super(ConvAE, self).__init__()
 
 		self.time_steps = time_steps
