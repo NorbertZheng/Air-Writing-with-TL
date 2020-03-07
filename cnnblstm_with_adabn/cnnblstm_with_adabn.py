@@ -143,7 +143,7 @@ class cnnblstm_with_adabn(nn.Module):
 		maxPool1d_adabn_output, maxPool1d_output = self.net1_adabn(maxPool1d_output), None
 		maxPool1d_adabn_t_output = maxPool1d_adabn_output.permute(0, 2, 1).contiguous()
 		# BiLSTM
-		(bilstm_output, self.hidden), maxPool1d_adabn_t_output = self.net2(maxPool1d_adabn_t_output, self.hidden), None
+		(bilstm_output, _), maxPool1d_adabn_t_output = self.net2(maxPool1d_adabn_t_output, None), None
 		# MaxPooling1D time_steps
 		bilstm_output = bilstm_output.permute(0, 2, 1)
 		maxPooling_output, bilstm_output = F.max_pool1d(bilstm_output, kernel_size = bilstm_output.size(2)).squeeze(2), None
@@ -226,11 +226,13 @@ class cnnblstm_with_adabn(nn.Module):
 					b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
+				"""
 				# get hidden
 				if self.use_cuda:
 					self.init_hidden(b_x.size(0) // torch.cuda.device_count())
 				else:
 					self.init_hidden(b_x.size(0))
+				"""
 				# update adabn running stats
 				self.update_adabn_running_stats()
 				# get output
@@ -279,11 +281,13 @@ class cnnblstm_with_adabn(nn.Module):
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
+		"""
 		# get hidden
 		if self.use_cuda:
 			self.init_hidden(test_x.size(0) // torch.cuda.device_count())
 		else:
 			self.init_hidden(test_x.size(0))
+		"""
 		# update adabn running stats
 		self.update_adabn_running_stats()
 		# get output
