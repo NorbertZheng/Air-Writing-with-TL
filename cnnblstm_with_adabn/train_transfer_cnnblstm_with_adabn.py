@@ -19,7 +19,7 @@ usage:
 """
 
 if __name__ == '__main__':
-	torch.manual_seed(2)
+	torch.manual_seed(1)
 
 	# get TRANSFER_PATH & 
 	TRANSFER_PATH = sys.argv[1]

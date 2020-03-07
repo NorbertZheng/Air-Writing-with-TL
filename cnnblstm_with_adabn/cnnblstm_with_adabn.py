@@ -38,7 +38,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.n_layers = 1
 		self.bidirectional = True
 
-		self.ae = AutoEncoder.load_AE(type = "ConvAE", time_steps = self.time_steps, n_features = self.n_features, use_cuda = self.use_cuda, params_pkl = os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_AE)):
+		self.ae = AutoEncoder.load_AE(type = "ConvAE", time_steps = self.time_steps, n_features = self.n_features, use_cuda = self.use_cuda, params_pkl = os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_AE))
 
 		# build net1 cnn
 		self.net1 = nn.Sequential(
@@ -96,49 +96,35 @@ class cnnblstm_with_adabn(nn.Module):
 			cell_state = torch.zeros(n_layers, batch_size, self.n_hidden)
 		self.hidden = (hidden_state, cell_state)
 
-	def init_weights(self):
+	def reset_parameters(self):
 		"""
 		temp useless
 		Here we reproduce Keras default initialization weights for consistency with Keras version
 		"""
 		# get weights & bias set
-		net1_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net1" in name)))
-		net1_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net1" in name)))
-		net1_adabn_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net1_adabn" in name)))
-		net1_adabn_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net1_adabn" in name)))
-		# net2_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net2" in name)))
-		# net2_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net2" in name)))
-		net2_adabn_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net2_adabn" in name)))
-		net2_adabn_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net2_adabn" in name)))
-		net3_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net3" in name)))
-		net3_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net3" in name)))
-		net3_adabn_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net3_adabn" in name)))
-		net3_adabn_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net3_adabn" in name)))
-		net4_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and ("net4" in name)))
-		net4_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and ("net4" in name)))
+		net1_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net1" in name) and ("net1_adabn" not in name))))
+		net1_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net1" in name) and ("net1_adabn" not in name))))
+		# net2_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net2" in name) and ("net2_adabn" not in name))))
+		# net2_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net2" in name) and ("net2_adabn" not in name))))
+		net3_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net3" in name) and ("net3_adabn" not in name))))
+		net3_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net3" in name) and ("net3_adabn" not in name))))
+		net4_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net4" in name) and ("net4_adabn" not in name))))
+		net4_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net4" in name) and ("net4_adabn" not in name))))
 		# init weights & bias
-		self.ae.init_weights()
+		self.ae.reset_parameters()
 		for name, params_data in net1_weights:
+			# print(name)
 			nn.init.xavier_uniform_(params_data)
 		for name, params_data in net1_biases:
 			nn.init.constant_(params_data, 0)
-		for name, params_data in net1_adabn_weights:
-			nn.init.xavier_uniform_(params_data)
-		for name, params_data in net1_adabn_biases:
-			nn.init.constant_(params_data, 0)
-		self.net2.init_weights()		# lstm init weights
-		for name, params_data in net2_adabn_weights:
-			nn.init.xavier_uniform_(params_data)
-		for name, params_data in net2_adabn_biases:
-			nn.init.constant_(params_data, 0)
+		self.net1_adabn.reset_parameters()
+		self.net2.reset_parameters()		# lstm reset parameters
+		self.net2_adabn.reset_parameters()
 		for name, params_data in net3_weights:
 			nn.init.xavier_uniform_(params_data)
 		for name, params_data in net3_biases:
 			nn.init.constant_(params_data, 0)
-		for name, params_data in net3_adabn_weights:
-			nn.init.xavier_uniform_(params_data)
-		for name, params_data in net3_adabn_biases:
-			nn.init.constant_(params_data, 0)
+		self.net3_adabn.reset_parameters()
 		for name, params_data in net4_weights:
 			nn.init.xavier_uniform_(params_data)
 		for name, params_data in net4_biases:
@@ -177,7 +163,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.net2_adabn.update_running_stats()
 		self.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.01, n_epoches = 20, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""
@@ -194,15 +180,13 @@ class cnnblstm_with_adabn(nn.Module):
 		# review train_x
 		train_x = train_x.view(-1, self.n_features, self.time_steps)
 		# optimize all cnn parameters
-		params = [{"params": model.parameters()} for model in self.m_cnnblstm_with_adabn.children() if model  not in [self.ae]]
-		for param in params:
-			print(param)
+		params = [{"params": model.parameters()} for model in self.children() if model  not in [self.ae]]
 		optimizer = torch.optim.Adam(params, lr = learning_rate)
 		# the target label is not one-hotted
 		loss_func = nn.CrossEntropyLoss()
 
 		# init params
-		self.init_weights()
+		self.reset_parameters()
 
 		# load params
 		self.load_params()
@@ -223,7 +207,7 @@ class cnnblstm_with_adabn(nn.Module):
 			train_y = train_y.cuda()
 
 		# get autoencoder
-		self.ae = AutoEncoder.train_AE(self.ae, train_x, train_x)
+		self.ae = AutoEncoder.train_AE(self.ae, train_x, train_x, n_epoches = 20)
 		self.ae.save_params()
  
 		# get train_data
@@ -243,7 +227,10 @@ class cnnblstm_with_adabn(nn.Module):
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
 				# get hidden
-				self.init_hidden(b_x.size(0) // torch.cuda.device_count())
+				if self.use_cuda:
+					self.init_hidden(b_x.size(0) // torch.cuda.device_count())
+				else:
+					self.init_hidden(b_x.size(0))
 				# update adabn running stats
 				self.update_adabn_running_stats()
 				# get output
@@ -260,7 +247,7 @@ class cnnblstm_with_adabn(nn.Module):
 				optimizer.step()									# apply gradients
 
 				# print loss
-				if (step + 1) % 10 == 0:
+				if (step + 1) % 1 == 0:
 					print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
 
 			# save params
@@ -273,7 +260,7 @@ class cnnblstm_with_adabn(nn.Module):
 		test network model with test set
 		"""
 		# init params
-		self.init_weights()
+		self.reset_parameters()
 
 		# load params
 		self.load_params()
@@ -294,7 +281,10 @@ class cnnblstm_with_adabn(nn.Module):
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
 		# get hidden
-		self.init_hidden(test_x.size(0) // torch.cuda.device_count())
+		if self.use_cuda:
+			self.init_hidden(test_x.size(0) // torch.cuda.device_count())
+		else:
+			self.init_hidden(test_x.size(0))
 		# update adabn running stats
 		self.update_adabn_running_stats()
 		# get output

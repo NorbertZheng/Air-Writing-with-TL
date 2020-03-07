@@ -6,6 +6,9 @@ from torch.autograd import Variable
 # local class
 from cnnblstm_with_adabn import cnnblstm_with_adabn
 from AdaBN import AdaBN
+import sys
+sys.path.append("../network/AutoEncoder")
+import AutoEncoder
 
 class transfer_cnnblstm_with_adabn(nn.Module):
 	PARAMS_FILE = "params.pkl"
@@ -67,7 +70,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net2_adabn.update_running_stats()
 		self.m_cnnblstm_with_adabn.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.01, n_epoches = 20, batch_size = 20, shuffle = True):
 		# init params
 		# self.init_partial_weights()
 
@@ -92,11 +95,14 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 			else:
 				test_x = Variable(test_x)
 			# get autoencoder
-			self.m_cnnblstm_with_adabn.ae = AutoEncoder.train_AE(self.ae, test_x, test_x)
+			self.m_cnnblstm_with_adabn.ae = AutoEncoder.train_AE(self.m_cnnblstm_with_adabn.ae, test_x, test_x, n_epoches = 20)
 			self.m_cnnblstm_with_adabn.ae.save_params()
 			for epoch in range(n_epoches):
 				# get hidden
-				self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
+				if self.use_cuda:
+					self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
+				else:
+					self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0))
 				# update adabn running stats
 				self.update_adabn_running_stats()
 				# get output
@@ -111,7 +117,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 				train_x = train_x.cuda()
 				train_y = train_y.cuda()
 			# get autoencoder
-			self.m_cnnblstm_with_adabn.ae = AutoEncoder.train_AE(self.ae, train_x, train_x)
+			self.m_cnnblstm_with_adabn.ae = AutoEncoder.train_AE(self.m_cnnblstm_with_adabn.ae, train_x, train_x, n_epoches = 20)
 			self.m_cnnblstm_with_adabn.ae.save_params()
 			# get train_data
 			train_data = torch.utils.data.TensorDataset(train_x, train_y)
@@ -135,7 +141,10 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 					else:
 						b_x, b_y = Variable(b_x), Variable(b_y)
 					# get hidden
-					self.m_cnnblstm_with_adabn.init_hidden(b_x.size(0) // torch.cuda.device_count())
+					if self.use_cuda:
+						self.m_cnnblstm_with_adabn.init_hidden(b_x.size(0) // torch.cuda.device_count())
+					else:
+						self.m_cnnblstm_with_adabn.init_hidden(b_x.size(0))
 					# update adabn running stats
 					self.update_adabn_running_stats()
 					# get output
@@ -181,7 +190,10 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		else:
 			test_x, test_y = Variable(test_x), Variable(test_y)
 		# get hidden
-		self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
+		if self.use_cuda:
+			self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
+		else:
+			self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0))
 		# update adabn running stats
 		self.update_adabn_running_stats()
 		# get output

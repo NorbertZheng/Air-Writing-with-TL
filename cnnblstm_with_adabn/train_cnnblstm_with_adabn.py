@@ -19,7 +19,7 @@ usage:
 """
 
 if __name__ == '__main__':
-	torch.manual_seed(2)
+	torch.manual_seed(1)
 
 	# get TRAIN_PATH_SYS & TEST_PATH_SYS & PARAMS_PATH_SYS
 	CMD = sys.argv[1]

@@ -28,7 +28,7 @@ class SeqAE(nn.Module):
 		self.encoder = LSTMHardSigmoid(input_size = self.n_features, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 		self.decoder = LSTMHardSigmoid(input_size = self.n_hidden, hidden_size = self.n_features, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 
-	def init_weights(self):
+	def reset_parameters(self):
 		# get weight set
 		encoder_weights = ((name, params.data) for name, params in self.named_parameters() if (("encoder" in name) and ("weight" in name)))
 		encoder_biases = ((name, params.data) for name, params in self.named_parameters() if (("encoder" in name) and ("bias" in name)))
@@ -95,18 +95,17 @@ class SeqAE(nn.Module):
 		# (batch, 3, 800)
 		return output
 
-	def trainAllLayers(self, src_x, target_x, learning_rate = 0.01, n_epoches = 10, batch_size = 20, shuffle = True, pre_trained = False):
+	def trainAllLayers(self, src_x, target_x, learning_rate = 0.01, n_epoches = 10, batch_size = 20, shuffle = True):
 		# optimize all cnn parameters
 		optimizer = torch.optim.Adam(self.parameters(), lr = learning_rate)
 		# the target label is not one-hotted
 		loss_func = nn.MSELoss()
 
 		# init params
-		self.init_weights()
+		self.reset_parameters()
 
 		# load params
-		if pre_trained:
-			self.load_params()
+		self.load_params()
 
 		# set train mode True
 		self.train()
@@ -170,14 +169,14 @@ class SeqAE(nn.Module):
 				self.load_state_dict(torch.load(self.params_pkl, map_location = torch.device('cpu')))
 			print("load_params success!")
 
-	def get_model(self, src_x = None, target_x = None, pre_trained = False):
+	def get_model(self, src_x = None, target_x = None, n_epoches = 20, pre_trained = False):
 		"""
 		get pretrained model
 		"""
 		if pre_trained:
 			self.load_params()
 		else:
-			self.trainAllLayers(src_x, target_x, pre_trained = False)
+			self.trainAllLayers(src_x, target_x, n_epoches = n_epoches)
 		return self
 
 if __name__ == "__main__":
