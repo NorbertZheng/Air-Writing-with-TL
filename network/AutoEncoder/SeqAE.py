@@ -113,7 +113,7 @@ class SeqAE(nn.Module):
 		# if use_cuda
 		if self.use_cuda:
 			src_x = src_x.cuda()
-			target_y = target_y.cuda()
+			target_x = target_x.cuda()
 
 		# get train_data
 		train_data = torch.utils.data.TensorDataset(src_x, target_x)
