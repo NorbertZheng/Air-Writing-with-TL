@@ -101,11 +101,13 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 			self.m_cnnblstm_with_adabn.ae = AutoEncoder.train_AE(self.m_cnnblstm_with_adabn.ae, test_x, test_x, n_epoches = 20)
 			self.m_cnnblstm_with_adabn.ae.save_params()
 			for epoch in range(n_epoches):
+				"""
 				# get hidden
 				if self.use_cuda:
 					self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
 				else:
 					self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0))
+				"""
 				# update adabn running stats
 				self.update_adabn_running_stats()
 				# get output
@@ -143,11 +145,13 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 						b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
 					else:
 						b_x, b_y = Variable(b_x), Variable(b_y)
+					"""
 					# get hidden
 					if self.use_cuda:
 						self.m_cnnblstm_with_adabn.init_hidden(b_x.size(0) // torch.cuda.device_count())
 					else:
 						self.m_cnnblstm_with_adabn.init_hidden(b_x.size(0))
+					"""
 					# update adabn running stats
 					self.update_adabn_running_stats()
 					# get output
