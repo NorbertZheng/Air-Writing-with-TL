@@ -73,7 +73,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net2_adabn.update_running_stats()
 		self.m_cnnblstm_with_adabn.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.01, n_epoches = 20, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.01, n_epoches = 20, batch_size = 10, shuffle = True):
 		# init params
 		# self.init_partial_weights()
 
@@ -168,7 +168,8 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 					optimizer.step()									# apply gradients
 
 					# print loss
-					print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+					if (step + 1) % 5 == 0:
+						print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
 
 				# save params
 				self.save_params()
@@ -186,25 +187,27 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.eval()
 
 		# get parallel model
-		if torch.cuda.device_count() > 1:
-			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
-			parallel_cba = parallel_cba.cuda()
-		else:
-			parallel_cba = self
-		# cuda test_data
 		if self.use_cuda:
-			test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
-		else:
-			test_x, test_y = Variable(test_x), Variable(test_y)
+			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
+			# parallel_cba = parallel_cba.cuda()
+		# cuda test_data
+		with torch.no_grad():
+			if self.use_cuda:
+				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
+			else:
+				test_x, test_y = Variable(test_x), Variable(test_y)
+		"""
 		# get hidden
 		if self.use_cuda:
 			self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0) // torch.cuda.device_count())
 		else:
 			self.m_cnnblstm_with_adabn.init_hidden(test_x.size(0))
+		"""
 		# update adabn running stats
 		self.update_adabn_running_stats()
 		# get output
-		output = parallel_cba(test_x)
+		with torch.no_grad():
+			output = parallel_cba(test_x)
 		# print(output)
 		prediction = torch.max(output, 1)[1]
 		pred_y = prediction.cpu().data.numpy()
