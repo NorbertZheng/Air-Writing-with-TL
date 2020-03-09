@@ -84,11 +84,11 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.train()
 
 		# get parallel model
-		if torch.cuda.device_count() > 1:
+		parallel_cba = self
+		if self.use_cuda:
+			print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
-			parallel_cba = parallel_cba.cuda()
-		else:
-			parallel_cba = self
+			# parallel_cba = parallel_cba.cuda()
 
 		# unsespected data flow
 		if test_x != None:
@@ -187,7 +187,9 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.eval()
 
 		# get parallel model
+		parallel_cba = self
 		if self.use_cuda:
+			print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
 			# parallel_cba = parallel_cba.cuda()
 		# cuda test_data

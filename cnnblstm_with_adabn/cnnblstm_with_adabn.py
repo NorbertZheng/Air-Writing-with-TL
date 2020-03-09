@@ -34,6 +34,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.enable_CORAL = enable_CORAL
 
 		self.n_filters = 32
+		self.kernel_size = 15
 		self.n_hidden = 50	# 150
 		self.n_layers = 1
 		self.bidirectional = True
@@ -42,7 +43,8 @@ class cnnblstm_with_adabn(nn.Module):
 
 		# build net1 cnn
 		self.net1 = nn.Sequential(
-			nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters, kernel_size = 15),
+			# nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters, kernel_size = self.kernel_size),
+			nn.Conv1d(in_channels = self.ae.n_filters3, out_channels = self.n_filters, kernel_size = self.kernel_size),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 			nn.Dropout(p = 0.5),
@@ -136,7 +138,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		print(input.shape)
 		# AutoEncoder
-		input = self.ae(input)
+		input = self.ae.encoder(input)
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
 		# maxPool1d_adabn_output = maxPool1d_output
@@ -197,7 +199,9 @@ class cnnblstm_with_adabn(nn.Module):
 		self.train()
 
 		# get parallel model
+		parallel_cba = self
 		if self.use_cuda:
+			print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
 			# parallel_cba = parallel_cba.cuda()
 
@@ -272,7 +276,9 @@ class cnnblstm_with_adabn(nn.Module):
 
 		
 		# get parallel model
+		parallel_cba = self
 		if self.use_cuda:
+			print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
 			# parallel_cba = parallel_cba.cuda()
 		# cuda test_data
