@@ -23,7 +23,7 @@ class cnnblstm(nn.Module):
 
 		self.n_filters = 32
 		self.kernel_size = 15
-		self.n_hidden = 50	# 150
+		self.n_hidden = 100	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
