@@ -138,7 +138,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		# print(input.shape)
 		# AutoEncoder
-		# input = self.ae.encoder(input)
+		input = self.ae.encoder(input)
 		# input = self.ae(input)
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
