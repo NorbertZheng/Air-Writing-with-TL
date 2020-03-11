@@ -19,16 +19,18 @@ class cnnblstm(nn.Module):
 		self.n_features = n_features
 		self.n_outputs = n_outputs
 		self.params_file = params_file
+		self.use_cuda = use_cuda
 
+		self.n_filters = 32
+		self.kernel_size = 15
 		self.n_hidden = 50	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
-		self.use_cuda = use_cuda
 
-		# build net1 features.cnn
+		# build net1 cnn
 		self.net1 = nn.Sequential(
-			nn.Conv1d(in_channels = self.n_features, out_channels = 128, kernel_size = 15),
+			nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters, kernel_size = self.kernel_size),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 			nn.Dropout(p = 0.5),
@@ -37,7 +39,7 @@ class cnnblstm(nn.Module):
 
 		# build net2 features.blstm
 		# self.net2 = nn.LSTM(input_size = 128, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
-		self.net2 = LSTMHardSigmoid(input_size = 128, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
+		self.net2 = LSTMHardSigmoid(input_size = self.n_filters, hidden_size = self.n_hidden, num_layers = self.n_layers, dropout = 0.2, batch_first = True, bidirectional = self.bidirectional, bias = True)
 		if self.bidirectional:
 			n_blstm_output = self.n_hidden * 2
 		else:
@@ -154,8 +156,9 @@ class cnnblstm(nn.Module):
 				optimizer.step()									# apply gradients
 
 				# print loss
-				if (step + 1) % 10 == 0:
-					print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+				# if (step + 1) % 10 == 0:
+				# 	print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+			print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / (len(train_loader) * batch_size), train_acc / (len(train_loader) * batch_size)))
 
 			# save params
 			self.save_params()
@@ -184,12 +187,12 @@ class cnnblstm(nn.Module):
 		self.init_hidden(test_x.size(0))
 		# get output
 		output = self(test_x)
-		print(output)
+		# print(output)
 		prediction = torch.max(output, 1)[1]
 		pred_y = prediction.cpu().data.numpy()
-		print(pred_y)
+		# print(pred_y)
 		target_y = test_y.cpu().data.numpy()
-		print(test_y)
+		# print(test_y)
 
 		accuracy = float((pred_y == target_y).astype(int).sum()) / float(target_y.size)
 		print("Accuracy: ", str(accuracy))
