@@ -94,7 +94,7 @@ class cnnblstm(nn.Module):
 		maxPool1d_output = self.net1(input)
 		maxPool1d_t_output = maxPool1d_output.permute(0, 2, 1).contiguous()
 		# BiLSTM
-		bilstm_output, self.hidden = self.net2(maxPool1d_t_output, self.hidden)
+		bilstm_output, _ = self.net2(maxPool1d_t_output, None)
 		# MaxPooling1D time_steps
 		# print(bilstm_output.size())
 		bilstm_output = bilstm_output.permute(0, 2, 1)
@@ -140,8 +140,6 @@ class cnnblstm(nn.Module):
 					b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
-				# get hidden
-				self.init_hidden(b_x.size(0))
 				# get output
 				output = self(b_x)									# CNN_BLSTM output
 				# get loss
@@ -183,8 +181,6 @@ class cnnblstm(nn.Module):
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
-		# get hidden
-		self.init_hidden(test_x.size(0))
 		# get output
 		output = self(test_x)
 		# print(output)
