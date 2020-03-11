@@ -137,8 +137,9 @@ class ConvAE(nn.Module):
 				optimizer.step()									# apply gradients
 
 				# print loss
-				if (step + 1) % 1 == 0:
-					print("[{}/{}], train loss is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size)))
+				# if (step + 1) % 1 == 0:
+				# 	print("[{}/{}], train loss is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size)))
+			print("[{}/{}], train loss is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / (len(train_loader) * batch_size)))
 
 			# save params
 			self.save_params()
@@ -150,7 +151,7 @@ class ConvAE(nn.Module):
 		save params & adabn's inner stats
 		"""
 		torch.save(self.state_dict(), self.params_pkl)
-		print("save_params success!")
+		# print("save_params success!")
 
 	def load_params(self):
 		"""
@@ -161,7 +162,7 @@ class ConvAE(nn.Module):
 				self.load_state_dict(torch.load(self.params_pkl, map_location = torch.device('cuda')))
 			else:
 				self.load_state_dict(torch.load(self.params_pkl, map_location = torch.device('cpu')))
-			print("load_params success!")
+			# print("load_params success!")
 
 	def get_model(self, src_x = None, target_x = None, n_epoches = 20, pre_trained = False):
 		"""

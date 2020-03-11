@@ -136,7 +136,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		compute the output of input according to the entire network model
 		"""
-		print(input.shape)
+		# print(input.shape)
 		# AutoEncoder
 		input = self.ae.encoder(input)
 		# input = self.ae(input)
@@ -256,7 +256,7 @@ class cnnblstm_with_adabn(nn.Module):
 				# print loss
 				# if (step + 1) % 5 == 0:
 					# print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
-			print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / len(train_loader), train_acc / len(train_loader)))
+			print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / (len(train_loader) * batch_size), train_acc / (len(train_loader) * batch_size)))
 
 			# save params
 			self.save_params()
