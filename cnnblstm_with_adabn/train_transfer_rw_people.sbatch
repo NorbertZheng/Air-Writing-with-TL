@@ -7,6 +7,12 @@ python train_cnnblstm_with_adabn.py test ../dataset/rw_people/zh2zyt/transfer/ .
 rm -rf ./params_transfer_rw_people_zh_100_un
 python train_transfer_cnnblstm_with_adabn.py ../dataset/rw_people/zh2zyt/transfer/ 0 100 ./params_rw_people_zh ./params_transfer_rw_people_zh_100_un false false false
 # semi-suspected
+rm -rf ./params_transfer_rw_people_zh_30_semi
+python train_transfer_cnnblstm_with_adabn.py ../dataset/rw_people/zh2zyt/transfer/ 30 0 ./params_rw_people_zh ./params_transfer_rw_people_zh_30_semi false false false
+# semi-suspected
+rm -rf ./params_transfer_rw_people_zh_50_semi
+python train_transfer_cnnblstm_with_adabn.py ../dataset/rw_people/zh2zyt/transfer/ 50 0 ./params_rw_people_zh ./params_transfer_rw_people_zh_50_semi false false false
+# semi-suspected
 rm -rf ./params_transfer_rw_people_zh_100_semi
 python train_transfer_cnnblstm_with_adabn.py ../dataset/rw_people/zh2zyt/transfer/ 100 0 ./params_rw_people_zh ./params_transfer_rw_people_zh_100_semi false false false
 
