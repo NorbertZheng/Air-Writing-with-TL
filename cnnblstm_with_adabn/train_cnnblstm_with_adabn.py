@@ -27,6 +27,7 @@ if __name__ == '__main__':
 	PARAMS_PATH_SYS = sys.argv[3]
 	enable_Kalman = (sys.argv[4] == "true")
 	enable_PCA = (sys.argv[5] == "true")
+	print(PATH_SYS)
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -41,11 +42,11 @@ if __name__ == '__main__':
 		# enable Kalman
 		if enable_Kalman:
 			train_x = tools.Kalman_Xs(train_x).astype(np.float32)
-			print(train_x.shape)
+			# print(train_x.shape)
 		# enable PCA
 		if enable_PCA:
 			train_x = tools.PCA_Xs(train_x).astype(np.float32)
-			print(train_x.shape)
+			# print(train_x.shape)
 		train_x = torch.from_numpy(train_x)
 		train_y = torch.from_numpy(train_y)
 		# trainAllLayers
@@ -57,11 +58,11 @@ if __name__ == '__main__':
 		# enable Kalman
 		if enable_Kalman:
 			test_x = tools.Kalman_Xs(test_x).astype(np.float32)
-			print(test_x.shape)
+			# print(test_x.shape)
 		# enable PCA
 		if enable_PCA:
 			test_x = tools.PCA_Xs(test_x).astype(np.float32)
-			print(test_x.shape)
+			# print(test_x.shape)
 		test_x = torch.from_numpy(test_x)
 		test_y = torch.from_numpy(test_y)
 		avc = AverageMeter()

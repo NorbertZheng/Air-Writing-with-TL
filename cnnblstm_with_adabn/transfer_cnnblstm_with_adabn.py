@@ -30,8 +30,8 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.n_outputs = n_outputs
 		self.use_cuda = use_cuda
 
-		self.n_filters = 64
-		self.n_hidden = 100
+		self.n_filters = 32
+		self.n_hidden = 50
 		self.bidirectional = True
 
 		self.m_cnnblstm_with_adabn = cnnblstm_with_adabn(time_steps = self.time_steps, n_features = self.n_features, n_outputs = self.n_outputs, use_cuda = self.use_cuda, params_dir = params_dir).get_model(pre_trained = True)
@@ -86,7 +86,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		# get parallel model
 		parallel_cba = self
 		if self.use_cuda:
-			print("we use cuda!")
+			# print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
 			# parallel_cba = parallel_cba.cuda()
 
@@ -116,7 +116,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 			self.save_params()
 
 		if train_x != None:
-			print("train start!")
+			# print("train start!")
 			# if use_cuda
 			if self.use_cuda:
 				train_x = train_x.cuda()
@@ -169,12 +169,13 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 
 					# print loss
 					if (step + 1) % 5 == 0:
-						print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+						# print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+				print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / len(train_loader), train_acc / len(train_loader)))
 
 				# save params
 				self.save_params()
 
-			print("train finish!")
+			# print("train finish!")
 
 	def getTestAccuracy(self, test_x, test_y):
 		# init params
@@ -189,7 +190,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		# get parallel model
 		parallel_cba = self
 		if self.use_cuda:
-			print("we use cuda!")
+			# print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
 			# parallel_cba = parallel_cba.cuda()
 		# cuda test_data
@@ -225,7 +226,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.save_adabn_variables()
 		torch.save(self.state_dict(), os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE))
 		self.m_cnnblstm_with_adabn.ae.save_params()
-		print("save_params success!")
+		# print("save_params success!")
 
 	def save_adabn_variables(self):
 		self.m_cnnblstm_with_adabn.net1_adabn.save_attrs()
@@ -239,7 +240,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 				self.load_state_dict(torch.load(os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cuda')))
 			else:
 				self.load_state_dict(torch.load(os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
-			print("load_params success!")
+			# print("load_params success!")
 		self.m_cnnblstm_with_adabn.ae.load_params()
 
 	def load_adabn_variables(self):

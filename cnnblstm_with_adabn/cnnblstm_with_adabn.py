@@ -33,9 +33,9 @@ class cnnblstm_with_adabn(nn.Module):
 			os.mkdir(self.params_dir)
 		self.enable_CORAL = enable_CORAL
 
-		self.n_filters = 64
+		self.n_filters = 32
 		self.kernel_size = 15
-		self.n_hidden = 100	# 150
+		self.n_hidden = 50	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
@@ -171,7 +171,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		train all layers of network model
 		"""
-		print(os.environ["CUDA_VISIBLE_DEVICES"])
+		# print(os.environ["CUDA_VISIBLE_DEVICES"])
 		# CORAL
 		if self.enable_CORAL:
 			if test_x == None:
@@ -202,7 +202,7 @@ class cnnblstm_with_adabn(nn.Module):
 		# get parallel model
 		parallel_cba = self
 		if self.use_cuda:
-			print("we use cuda!")
+			# print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
 			# parallel_cba = parallel_cba.cuda()
 
@@ -255,12 +255,13 @@ class cnnblstm_with_adabn(nn.Module):
 
 				# print loss
 				if (step + 1) % 5 == 0:
-					print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+					# print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+			print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / len(train_loader), train_acc / len(train_loader)))
 
 			# save params
 			self.save_params()
 
-		print("train finish!")
+		# print("train finish!")
 
 	def getTestAccuracy(self, test_x, test_y):
 		"""
@@ -279,7 +280,7 @@ class cnnblstm_with_adabn(nn.Module):
 		# get parallel model
 		parallel_cba = self
 		if self.use_cuda:
-			print("we use cuda!")
+			# print("we use cuda!")
 			parallel_cba = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
 			# parallel_cba = parallel_cba.cuda()
 		# cuda test_data
@@ -318,7 +319,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.save_adabn_variables()
 		torch.save(self.state_dict(), os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE))
 		self.ae.save_params()
-		print("save_params success!")
+		# print("save_params success!")
 
 	def save_adabn_variables(self):
 		"""
@@ -338,7 +339,7 @@ class cnnblstm_with_adabn(nn.Module):
 				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cuda')))
 			else:
 				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
-			print("load_params success!")
+			# print("load_params success!")
 		self.ae.load_params()
 
 	def load_adabn_variables(self):

@@ -30,6 +30,7 @@ if __name__ == '__main__':
 	enable_PCA = (sys.argv[6] == "true")
 	enable_Kalman = (sys.argv[7] == "true")
 	IS_6DMG = (sys.argv[8] == "true")
+	print(TRANSFER_PARAMS_PATH)
 	# whether use cuda
 	use_cuda = torch.cuda.is_available()
 	if use_cuda:
@@ -52,27 +53,27 @@ if __name__ == '__main__':
 	# enable Kalman
 	if enable_Kalman:
 		transfer_x = tools.Kalman_Xs(transfer_x).astype(np.float32)
-		print(transfer_x.shape)
+		# print(transfer_x.shape)
 	# enable PCA
 	if enable_PCA:
 		transfer_x = tools.PCA_Xs(transfer_x).astype(np.float32)
-		print(transfer_x.shape)
+		# print(transfer_x.shape)
 	# get train_x & train_y
 	if N_TRAINSET != 0:
 		train_x = torch.from_numpy(transfer_x[:N_TRAINSET, :, :])
 		train_y = torch.from_numpy(transfer_y[:N_TRAINSET])
-		print(train_x.shape, train_y.shape)
+		# print(train_x.shape, train_y.shape)
 	else:
 		train_x, train_y = None, None
 	# get test_x & test_y
 	if (N_TRAINSET != 0):
 		test_x = torch.from_numpy(transfer_x[N_TRAINSET:, :, :])
 		test_y = torch.from_numpy(transfer_y[N_TRAINSET:])
-		print(test_x.shape, test_y.shape)
+		# print(test_x.shape, test_y.shape)
 	elif (N_TESTSET != 0):
 		test_x = torch.from_numpy(transfer_x[:N_TESTSET, :, :])
 		test_y = torch.from_numpy(transfer_y[:N_TESTSET])
-		print(test_x.shape, test_y.shape)
+		# print(test_x.shape, test_y.shape)
 	else:
 		print("N_TRAINSET or N_TESTSET ERROR!")
 	# get test acc

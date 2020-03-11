@@ -137,8 +137,8 @@ class AdaBN(nn.Module):
 			self.n_j_next = self._load_attr(os.path.join(self.variables_dir, AdaBN.N_J_NEXT_FILE))
 			if ((self.mu_j == None) or (self.sigma_j == None) or (self.n_j == None) or (self.mu_j_next == None) or (self.sigma_j_next == None) or (self.n_j_next == None)):
 				self.reset_running_stats()
-				print("reset running stats!")
-			print("load attrs from dict successfully!")
+				# print("reset running stats!")
+			# print("load attrs from dict successfully!")
 
 	def _save_attr(self, path, attr):
 		"""
@@ -158,7 +158,7 @@ class AdaBN(nn.Module):
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.MU_J_NEXT_FILE), self.mu_j_next)
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.SIGMA_J_NEXT_FILE), self.sigma_j_next)
 		self._save_attr(os.path.join(self.variables_dir, AdaBN.N_J_NEXT_FILE), self.n_j_next)
-		print("save attrs into pkl successfully!")
+		# print("save attrs into pkl successfully!")
 
 def adaptive_batch_norm(input, gamma, beta, mu_j, sigma_j, n_j, is_training = True, eps = 1e-5, ):
 	"""
