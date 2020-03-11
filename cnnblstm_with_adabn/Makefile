@@ -6,6 +6,7 @@ clean_all:
 	make clean
 	rm -rf ./transfer_params_*
 	rm -rf ./params_*
+	rm -rf *.out
 
 clean:
 	rm -rf ./__pycache__
