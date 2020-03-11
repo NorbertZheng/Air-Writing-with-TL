@@ -33,9 +33,9 @@ class cnnblstm_with_adabn(nn.Module):
 			os.mkdir(self.params_dir)
 		self.enable_CORAL = enable_CORAL
 
-		self.n_filters = 32
+		self.n_filters = 64
 		self.kernel_size = 15
-		self.n_hidden = 50	# 150
+		self.n_hidden = 100	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
