@@ -254,7 +254,7 @@ class cnnblstm_with_adabn(nn.Module):
 				optimizer.step()									# apply gradients
 
 				# print loss
-				if (step + 1) % 5 == 0:
+				# if (step + 1) % 5 == 0:
 					# print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
 			print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / len(train_loader), train_acc / len(train_loader)))
 
