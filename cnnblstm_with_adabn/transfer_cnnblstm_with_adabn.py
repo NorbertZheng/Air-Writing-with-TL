@@ -30,8 +30,8 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.n_outputs = n_outputs
 		self.use_cuda = use_cuda
 
-		self.n_filters = 64
-		self.n_hidden = 100
+		self.n_filters = 128
+		self.n_hidden = 150
 		self.bidirectional = True
 
 		self.m_cnnblstm_with_adabn = cnnblstm_with_adabn(time_steps = self.time_steps, n_features = self.n_features, n_outputs = self.n_outputs, use_cuda = self.use_cuda, params_dir = params_dir).get_model(pre_trained = True)
