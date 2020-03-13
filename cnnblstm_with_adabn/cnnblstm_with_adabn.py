@@ -33,9 +33,9 @@ class cnnblstm_with_adabn(nn.Module):
 			os.mkdir(self.params_dir)
 		self.enable_CORAL = enable_CORAL
 
-		self.n_filters = 128
+		self.n_filters = 64
 		self.kernel_size = 15
-		self.n_hidden = 150	# 150
+		self.n_hidden = 100	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
@@ -43,8 +43,8 @@ class cnnblstm_with_adabn(nn.Module):
 
 		# build net1 cnn
 		self.net1 = nn.Sequential(
-			nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters, kernel_size = self.kernel_size),
-			# nn.Conv1d(in_channels = self.ae.n_filters3, out_channels = self.n_filters, kernel_size = self.kernel_size),
+			# nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters, kernel_size = self.kernel_size),
+			nn.Conv1d(in_channels = self.ae.n_filters3, out_channels = self.n_filters, kernel_size = self.kernel_size),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 			nn.Dropout(p = 0.5),
@@ -138,7 +138,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		# print(input.shape)
 		# AutoEncoder
-		# input = self.ae.encoder(input)
+		input = self.ae.encoder(input)
 		# input = self.ae(input)
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
