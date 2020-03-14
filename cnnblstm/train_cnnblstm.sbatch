@@ -1,5 +1,6 @@
 #!/bin/sh
-# rm -rf ./params_dong2zh.pkl
-python train_cnnblstm.py train ../dataset/train/ ./params_dong2zh.pkl
-python train_cnnblstm.py test ../dataset/transfer/ ./params_dong2zh.pkl
-# rm -rf ./params_dong2zh.pkl
+module load nvidia/cuda/10.0
+# get general model
+rm -rf ./params_general_cb.pkl
+python train_cnnblstm.py train ../dataset/all_train/ ./params_general_cb.pkl
+python train_cnnblstm.py test ../dataset/all_test/ ./params_general_cb.pkl

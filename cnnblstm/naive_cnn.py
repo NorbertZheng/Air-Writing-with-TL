@@ -20,25 +20,27 @@ class naive_cnn(nn.Module):
 		self.n_outputs = n_outputs
 		self.params_file = params_file
 
-		self.n_hidden = 150
-		self.n_layers = 1
-		self.bidirectional = True
+		self.n_filters = 128
+		self.kernel_size = 15
 
 		self.use_cuda = use_cuda
 
 		# build net1 features.cnn
 		self.net1 = nn.Sequential(
-			nn.Conv1d(in_channels = self.n_features, out_channels = 128, kernel_size = 15),
+			# (batch, 3, 800)
+			nn.Conv1d(in_channels = self.n_features, out_channels = self.n_filters, kernel_size = self.kernel_size),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 			nn.Dropout(p = 0.5),
+			# (batch, 128, 786)
 			nn.MaxPool1d(kernel_size = 2)
+			# (batch, 128, 393)
 		)
 
 		# build net2 classifier(fc->fc)
 		self.net3 = nn.Sequential(
 			# nn.Tanh(),
-			nn.Linear(300, 50, bias = True),
+			nn.Linear(((self.time_steps - self.kernel_size + 1) // 2), 50, bias = True),
 			nn.ReLU(),
 			# nn.Sigmoid(),
 			nn.Dropout(p = 0.2),
@@ -46,35 +48,25 @@ class naive_cnn(nn.Module):
 			nn.Softmax(dim = 1)
 		)
 
-	def init_hidden(self, batch_size):
+	def reset_parameters(self):
 		"""
-		init blstm's hidden states
-		"""
-		if self.bidirectional:
-			n_layers = self.n_layers * 2
-		else:
-			n_layers = self.n_layers
-		if self.use_cuda:
-			hidden_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
-			cell_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
-		else:
-			hidden_state = torch.zeros(n_layers, batch_size, self.n_hidden)
-			cell_state = torch.zeros(n_layers, batch_size, self.n_hidden)
-		self.hidden = (hidden_state, cell_state)
-
-	def init_weights(self):
-		"""
+		temp useless
 		Here we reproduce Keras default initialization weights for consistency with Keras version
 		"""
-		ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
-		hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
-		b = (param.data for name, param in self.named_parameters() if 'bias' in name)
-		for t in ih:
-			nn.init.xavier_uniform(t)
-		for t in hh:
-			nn.init.orthogonal(t)
-		for t in b:
-			nn.init.constant(t, 0)
+		# get weights & bias set
+		net1_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net1" in name) and ("net1_adabn" not in name))))
+		net1_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net1" in name) and ("net1_adabn" not in name))))
+		net3_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net3" in name) and ("net3_adabn" not in name))))
+		net3_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net3" in name) and ("net3_adabn" not in name))))
+		# init weights & bias
+		for name, params_data in net1_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net1_biases:
+			nn.init.constant_(params_data, 0)
+		for name, params_data in net3_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net3_biases:
+			nn.init.constant_(params_data, 0)
 
 	def forward(self, input):
 		"""
@@ -82,18 +74,17 @@ class naive_cnn(nn.Module):
 		"""
 		# MaxPool1d
 		maxPool1d_output = self.net1(input)
+		# (batch, 128, 393)
 		maxPool1d_t_output = maxPool1d_output.permute(0, 2, 1).contiguous()
+		# (batch, 393, 128)
 		# BiLSTM
-		bilstm_output, self.hidden = self.net2(maxPool1d_t_output, self.hidden)
-		# MaxPooling1D time_steps
-		bilstm_output = bilstm_output.permute(0, 2, 1)
-		maxPooling_output = F.max_pool1d(bilstm_output, kernel_size = bilstm_output.size(2)).squeeze(2)
+		maxPooling_output = F.max_pool1d(maxPool1d_t_output, kernel_size = maxPool1d_t_output.size(2)).squeeze(2)
 		# get classifier
 		linear2_softmax_output = self.net3(maxPooling_output)
 
 		return linear2_softmax_output
 
-	def trainAllLayers(self, train_data, learning_rate = 0.001, n_epoches = 10, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_data, learning_rate = 0.01, n_epoches = 20, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""
@@ -105,7 +96,7 @@ class naive_cnn(nn.Module):
 		loss_func = nn.CrossEntropyLoss()
 
 		# init params
-		self.init_weights()
+		self.reset_parameters()
 
 		# load params
 		self.load_params()
@@ -124,8 +115,6 @@ class naive_cnn(nn.Module):
 					b_x, b_y = Variable(b_x).cuda(), Variable(b_y).cuda()
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
-				# get hidden
-				self.init_hidden(b_x.size(0))
 				# get output
 				output = self(b_x)									# CNN_BLSTM output
 				# get loss
@@ -140,8 +129,9 @@ class naive_cnn(nn.Module):
 				optimizer.step()									# apply gradients
 
 				# print loss
-				if (step + 1) % 10 == 0:
-					print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+				# if (step + 1) % 10 == 0:
+				# 	print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(step, len(train_loader), train_loss / ((step + 1) * batch_size), train_acc / ((step + 1) * batch_size)))
+			print("[{}/{}], train loss is: {:.6f}, train acc is: {:.6f}".format(len(train_loader), len(train_loader), train_loss / (len(train_loader) * batch_size), train_acc / (len(train_loader) * batch_size)))
 
 			# save params
 			self.save_params()
@@ -153,7 +143,7 @@ class naive_cnn(nn.Module):
 		test network model with test set
 		"""
 		# init params
-		self.init_weights()
+		self.reset_parameters()
 
 		# load params
 		self.load_params()
@@ -166,16 +156,14 @@ class naive_cnn(nn.Module):
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
-		# get hidden
-		self.init_hidden(test_x.size(0))
 		# get output
 		output = self(test_x)
-		print(output)
+		# print(output)
 		prediction = torch.max(output, 1)[1]
 		pred_y = prediction.cpu().data.numpy()
-		print(pred_y)
+		# print(pred_y)
 		target_y = test_y.cpu().data.numpy()
-		print(test_y)
+		# print(test_y)
 
 		accuracy = float((pred_y == target_y).astype(int).sum()) / float(target_y.size)
 		print("Accuracy: ", str(accuracy))

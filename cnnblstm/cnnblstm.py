@@ -21,9 +21,9 @@ class cnnblstm(nn.Module):
 		self.params_file = params_file
 		self.use_cuda = use_cuda
 
-		self.n_filters = 32
+		self.n_filters = 128
 		self.kernel_size = 15
-		self.n_hidden = 100	# 150
+		self.n_hidden = 150	# 150
 		self.n_layers = 1
 		self.bidirectional = True
 
@@ -56,35 +56,28 @@ class cnnblstm(nn.Module):
 			nn.Softmax(dim = 1)
 		)
 
-	def init_hidden(self, batch_size):
+	def reset_parameters(self):
 		"""
-		init blstm's hidden states
-		"""
-		if self.bidirectional:
-			n_layers = self.n_layers * 2
-		else:
-			n_layers = self.n_layers
-		if self.use_cuda:
-			hidden_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
-			cell_state = torch.zeros(n_layers, batch_size, self.n_hidden).cuda()
-		else:
-			hidden_state = torch.zeros(n_layers, batch_size, self.n_hidden)
-			cell_state = torch.zeros(n_layers, batch_size, self.n_hidden)
-		self.hidden = (hidden_state, cell_state)
-
-	def init_weights(self):
-		"""
+		temp useless
 		Here we reproduce Keras default initialization weights for consistency with Keras version
 		"""
-		ih = (param.data for name, param in self.named_parameters() if 'weight_ih' in name)
-		hh = (param.data for name, param in self.named_parameters() if 'weight_hh' in name)
-		b = (param.data for name, param in self.named_parameters() if 'bias' in name)
-		for t in ih:
-			nn.init.xavier_uniform(t)
-		for t in hh:
-			nn.init.orthogonal(t)
-		for t in b:
-			nn.init.constant(t, 0)
+		# get weights & bias set
+		net1_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net1" in name) and ("net1_adabn" not in name))))
+		net1_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net1" in name) and ("net1_adabn" not in name))))
+		# net2_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net2" in name) and ("net2_adabn" not in name))))
+		# net2_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net2" in name) and ("net2_adabn" not in name))))
+		net3_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net3" in name) and ("net3_adabn" not in name))))
+		net3_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net3" in name) and ("net3_adabn" not in name))))
+		# init weights & bias
+		for name, params_data in net1_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net1_biases:
+			nn.init.constant_(params_data, 0)
+		self.net2.reset_parameters()		# lstm reset parameters
+		for name, params_data in net3_weights:
+			nn.init.xavier_uniform_(params_data)
+		for name, params_data in net3_biases:
+			nn.init.constant_(params_data, 0)
 
 	def forward(self, input):
 		"""
@@ -121,7 +114,7 @@ class cnnblstm(nn.Module):
 		loss_func = nn.CrossEntropyLoss()
 
 		# init params
-		self.init_weights()
+		self.reset_parameters()
 
 		# load params
 		self.load_params()
@@ -168,7 +161,7 @@ class cnnblstm(nn.Module):
 		test network model with test set
 		"""
 		# init params
-		self.init_weights()
+		self.reset_parameters()
 
 		# load params
 		self.load_params()

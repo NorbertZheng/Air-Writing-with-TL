@@ -1,9 +1,6 @@
 #!/bin/sh
-# rm -rf ./params_horizon2vertical_un_PCA
-python train_cnnblstm_with_adabn.py train ../dataset/horizon/ ./params_horizon2vertical_un_PCA true true
-python train_cnnblstm_with_adabn.py test ../dataset/vertical ./params_horizon2vertical_un_PCA true true
-# rm -rf ./params_horizon2vertical_un_PCA
-# rm -rf ./params_dong2zh_un_nPCA
-python train_cnnblstm_with_adabn.py train ../dataset/train/ ./params_dong2zh_un_nPCA true false
-python train_cnnblstm_with_adabn.py test ../dataset/transfer/ ./params_dong2zh_un_nPCA true false
-# rm -rf ./params_dong2zh_un_nPCA
+module load nvidia/cuda/10.0
+# get general model
+rm -rf ./params_general_cba
+python train_cnnblstm_with_adabn.py train ../dataset/all_train/ ./params_general_cba false false
+python train_cnnblstm_with_adabn.py test ../dataset/all_test/ ./params_general_cba false false
