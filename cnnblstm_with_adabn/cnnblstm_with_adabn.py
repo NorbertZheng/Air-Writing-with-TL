@@ -276,7 +276,6 @@ class cnnblstm_with_adabn(nn.Module):
 		# set eval
 		self.eval()
 
-		
 		# get parallel model
 		parallel_cba = self
 		if self.use_cuda:

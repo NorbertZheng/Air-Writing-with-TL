@@ -104,6 +104,13 @@ class naive_cnn(nn.Module):
 		# set train mode True
 		self.train()
 
+		# get parallel model
+		parallel_cnn = self
+		if self.use_cuda:
+			# print("we use cuda!")
+			parallel_cnn = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
+			# parallel_cnn = parallel_cnn.cuda()
+
 		# training and testing
 		for epoch in range(n_epoches):
 			# init loss & acc
@@ -116,7 +123,7 @@ class naive_cnn(nn.Module):
 				else:
 					b_x, b_y = Variable(b_x), Variable(b_y)
 				# get output
-				output = self(b_x)									# CNN_BLSTM output
+				output = parallel_cnn(b_x)							# CNN_BLSTM output
 				# get loss
 				loss = loss_func(output, b_y)						# cross entropy loss
 				train_loss += loss.item() * len(b_y)
@@ -151,13 +158,20 @@ class naive_cnn(nn.Module):
 		# set eval
 		self.eval()
 
+		# get parallel model
+		parallel_cnn = self
+		if self.use_cuda:
+			# print("we use cuda!")
+			parallel_cnn = torch.nn.DataParallel(self, device_ids = range(torch.cuda.device_count()))
+			# parallel_cnn = parallel_cnn.cuda()
+
 		with torch.no_grad():
 			if self.use_cuda:
 				test_x, test_y = Variable(test_x).cuda(), Variable(test_y).cuda()
 			else:
 				test_x, test_y = Variable(test_x), Variable(test_y)
 		# get output
-		output = self(test_x)
+		output = parallel_cnn(test_x)
 		# print(output)
 		prediction = torch.max(output, 1)[1]
 		pred_y = prediction.cpu().data.numpy()
