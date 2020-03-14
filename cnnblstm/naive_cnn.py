@@ -91,6 +91,7 @@ class naive_cnn(nn.Module):
 		# Data Loader for easy mini-batch return in training
 		train_loader = torch.utils.data.DataLoader(dataset = train_data, batch_size = batch_size, shuffle = shuffle)
 		# optimize all cnn parameters
+		print(learning_rate)
 		optimizer = torch.optim.Adam(self.parameters(), lr = learning_rate)
 		# the target label is not one-hotted
 		loss_func = nn.CrossEntropyLoss()
