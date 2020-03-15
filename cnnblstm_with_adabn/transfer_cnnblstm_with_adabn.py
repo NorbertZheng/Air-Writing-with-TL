@@ -56,7 +56,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net3_adabn.variables_dir = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN)
 		if not os.path.exists(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN)):
 			os.mkdir(os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.NET3_ADABN))
-		self.m_cnnblstm_with_adabn.ae.params_pkl = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.PARAMS_AE)
+		# self.m_cnnblstm_with_adabn.ae.params_pkl = os.path.join(self.transfer_params_dir, transfer_cnnblstm_with_adabn.PARAMS_AE)
 		# save params
 		self.save_params()
 
@@ -73,7 +73,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 		self.m_cnnblstm_with_adabn.net2_adabn.update_running_stats()
 		self.m_cnnblstm_with_adabn.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.01, n_epoches = 20, batch_size = 10, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 10, shuffle = True):
 		# init params
 		# self.init_partial_weights()
 
@@ -97,9 +97,11 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 				test_x = Variable(test_x).cuda()
 			else:
 				test_x = Variable(test_x)
+			"""
 			# get autoencoder
 			self.m_cnnblstm_with_adabn.ae = AutoEncoder.train_AE(self.m_cnnblstm_with_adabn.ae, test_x, test_x, n_epoches = 20)
 			self.m_cnnblstm_with_adabn.ae.save_params()
+			"""
 			for epoch in range(n_epoches):
 				"""
 				# get hidden
@@ -121,9 +123,11 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 			if self.use_cuda:
 				train_x = train_x.cuda()
 				train_y = train_y.cuda()
+			"""
 			# get autoencoder
 			self.m_cnnblstm_with_adabn.ae = AutoEncoder.train_AE(self.m_cnnblstm_with_adabn.ae, train_x, train_x, n_epoches = 20)
 			self.m_cnnblstm_with_adabn.ae.save_params()
+			"""
 			# get train_data
 			train_data = torch.utils.data.TensorDataset(train_x, train_y)
 			# Data Loader for easy mini-batch return in training
@@ -225,7 +229,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 	def save_params(self):
 		self.save_adabn_variables()
 		torch.save(self.state_dict(), os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE))
-		self.m_cnnblstm_with_adabn.ae.save_params()
+		# self.m_cnnblstm_with_adabn.ae.save_params()
 		# print("save_params success!")
 
 	def save_adabn_variables(self):
@@ -241,7 +245,7 @@ class transfer_cnnblstm_with_adabn(nn.Module):
 			else:
 				self.load_state_dict(torch.load(os.path.join(self.transfer_params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
 			# print("load_params success!")
-		self.m_cnnblstm_with_adabn.ae.load_params()
+		# self.m_cnnblstm_with_adabn.ae.load_params()
 
 	def load_adabn_variables(self):
 		self.m_cnnblstm_with_adabn.net1_adabn.load_attrs()

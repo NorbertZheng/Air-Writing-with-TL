@@ -167,7 +167,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.net2_adabn.update_running_stats()
 		self.net3_adabn.update_running_stats()
 
-	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.01, n_epoches = 20, batch_size = 20, shuffle = True):
+	def trainAllLayers(self, train_x, train_y, test_x = None, learning_rate = 0.001, n_epoches = 20, batch_size = 20, shuffle = True):
 		"""
 		train all layers of network model
 		"""

@@ -1,24 +1,79 @@
 #!/bin/sh
-rm -rf ./transfer_params_25_un
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 0 25 ./params ./transfer_params_25_un true true false
-rm -rf ./transfer_params_50_un
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 0 50 ./params ./transfer_params_50_un true true false
-rm -rf ./transfer_params_75_un
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 0 75 ./params ./transfer_params_75_un true true false
-rm -rf ./transfer_params_100_un
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 0 100 ./params ./transfer_params_100_un true true false
-rm -rf ./transfer_params_5_semi
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 5 0 ./params ./transfer_params_5_semi true true false
-rm -rf ./transfer_params_10_semi
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 10 0 ./params ./transfer_params_10_semi true true false
-rm -rf ./transfer_params_15_semi
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 15 0 ./params ./transfer_params_15_semi true true false
-rm -rf ./transfer_params_20_semi
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 20 0 ./params ./transfer_params_20_semi true true false
-rm -rf ./transfer_params_25_semi
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 25 0 ./params ./transfer_params_25_semi true true false
-rm -rf ./transfer_params_30_semi
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 30 0 ./params ./transfer_params_30_semi true true false
-rm -rf ./transfer_params_100_semi
-python train_transfer_cnnblstm_with_adabn.py ../dataset/transfer/ 100 0 ./params ./transfer_params_100_semi true true false
-
+# MiPlay_acc_he_slow_hor
+rm -rf ./transfer_params_100_un_MiPlay_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/MiPlay_acc_he_slow_hor/ 0 100 ./params ./transfer_params_100_un_MiPlay_acc_he_slow_hor false false false
+rm -rf ./transfer_params_10_semi_MiPlay_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/MiPlay_acc_he_slow_hor/ 10 0 ./params ./transfer_params_10_semi_MiPlay_acc_he_slow_hor false false false
+rm -rf ./transfer_params_20_semi_MiPlay_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/MiPlay_acc_he_slow_hor/ 20 0 ./params ./transfer_params_20_semi_MiPlay_acc_he_slow_hor false false false
+rm -rf ./transfer_params_30_semi_MiPlay_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/MiPlay_acc_he_slow_hor/ 30 0 ./params ./transfer_params_30_semi_MiPlay_acc_he_slow_hor false false false
+rm -rf ./transfer_params_50_semi_MiPlay_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/MiPlay_acc_he_slow_hor/ 50 0 ./params ./transfer_params_50_semi_MiPlay_acc_he_slow_hor false false false
+rm -rf ./transfer_params_100_semi_MiPlay_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/MiPlay_acc_he_slow_hor/ 100 0 ./params ./transfer_params_100_semi_MiPlay_acc_he_slow_hor false false false
+# P30_acc_he_fast_hor
+rm -rf ./transfer_params_100_un_P30_acc_he_fast_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_hor/ 0 100 ./params ./transfer_params_100_un_P30_acc_he_fast_hor false false false
+rm -rf ./transfer_params_10_semi_P30_acc_he_fast_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_hor/ 10 0 ./params ./transfer_params_10_semi_P30_acc_he_fast_hor false false false
+rm -rf ./transfer_params_20_semi_P30_acc_he_fast_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_hor/ 20 0 ./params ./transfer_params_20_semi_P30_acc_he_fast_hor false false false
+rm -rf ./transfer_params_30_semi_P30_acc_he_fast_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_hor/ 30 0 ./params ./transfer_params_30_semi_P30_acc_he_fast_hor false false false
+rm -rf ./transfer_params_50_semi_P30_acc_he_fast_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_hor/ 50 0 ./params ./transfer_params_50_semi_P30_acc_he_fast_hor false false false
+rm -rf ./transfer_params_100_semi_P30_acc_he_fast_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_hor/ 100 0 ./params ./transfer_params_100_semi_P30_acc_he_fast_hor false false false
+# P30_acc_he_fast_ver
+rm -rf ./transfer_params_100_un_P30_acc_he_fast_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_ver/ 0 100 ./params ./transfer_params_100_un_P30_acc_he_fast_ver false false false
+rm -rf ./transfer_params_10_semi_P30_acc_he_fast_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_ver/ 10 0 ./params ./transfer_params_10_semi_P30_acc_he_fast_ver false false false
+rm -rf ./transfer_params_20_semi_P30_acc_he_fast_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_ver/ 20 0 ./params ./transfer_params_20_semi_P30_acc_he_fast_ver false false false
+rm -rf ./transfer_params_30_semi_P30_acc_he_fast_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_ver/ 30 0 ./params ./transfer_params_30_semi_P30_acc_he_fast_ver false false false
+rm -rf ./transfer_params_50_semi_P30_acc_he_fast_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_ver/ 50 0 ./params ./transfer_params_50_semi_P30_acc_he_fast_ver false false false
+rm -rf ./transfer_params_100_semi_P30_acc_he_fast_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_fast_ver/ 100 0 ./params ./transfer_params_100_semi_P30_acc_he_fast_ver false false false
+# P30_acc_he_slow_hor
+rm -rf ./transfer_params_100_un_P30_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_hor/ 0 100 ./params ./transfer_params_100_un_P30_acc_he_slow_hor false false false
+rm -rf ./transfer_params_10_semi_P30_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_hor/ 10 0 ./params ./transfer_params_10_semi_P30_acc_he_slow_hor false false false
+rm -rf ./transfer_params_20_semi_P30_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_hor/ 20 0 ./params ./transfer_params_20_semi_P30_acc_he_slow_hor false false false
+rm -rf ./transfer_params_30_semi_P30_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_hor/ 30 0 ./params ./transfer_params_30_semi_P30_acc_he_slow_hor false false false
+rm -rf ./transfer_params_50_semi_P30_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_hor/ 50 0 ./params ./transfer_params_50_semi_P30_acc_he_slow_hor false false false
+rm -rf ./transfer_params_100_semi_P30_acc_he_slow_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_hor/ 100 0 ./params ./transfer_params_100_semi_P30_acc_he_slow_hor false false false
+# P30_acc_he_slow_ver
+rm -rf ./transfer_params_100_un_P30_acc_he_slow_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_ver/ 0 100 ./params ./transfer_params_100_un_P30_acc_he_slow_ver false false false
+rm -rf ./transfer_params_10_semi_P30_acc_he_slow_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_ver/ 10 0 ./params ./transfer_params_10_semi_P30_acc_he_slow_ver false false false
+rm -rf ./transfer_params_20_semi_P30_acc_he_slow_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_ver/ 20 0 ./params ./transfer_params_20_semi_P30_acc_he_slow_ver false false false
+rm -rf ./transfer_params_30_semi_P30_acc_he_slow_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_ver/ 30 0 ./params ./transfer_params_30_semi_P30_acc_he_slow_ver false false false
+rm -rf ./transfer_params_50_semi_P30_acc_he_slow_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_ver/ 50 0 ./params ./transfer_params_50_semi_P30_acc_he_slow_ver false false false
+rm -rf ./transfer_params_100_semi_P30_acc_he_slow_ver
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_he_slow_ver/ 100 0 ./params ./transfer_params_100_semi_P30_acc_he_slow_ver false false false
+# P30_acc_tong_hor
+rm -rf ./transfer_params_100_un_P30_acc_tong_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_tong_hor/ 0 100 ./params ./transfer_params_100_un_P30_acc_tong_hor false false false
+rm -rf ./transfer_params_10_semi_P30_acc_tong_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_tong_hor/ 10 0 ./params ./transfer_params_10_semi_P30_acc_tong_hor false false false
+rm -rf ./transfer_params_20_semi_P30_acc_tong_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_tong_hor/ 20 0 ./params ./transfer_params_20_semi_P30_acc_tong_hor false false false
+rm -rf ./transfer_params_30_semi_P30_acc_tong_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_tong_hor/ 30 0 ./params ./transfer_params_30_semi_P30_acc_tong_hor false false false
+rm -rf ./transfer_params_50_semi_P30_acc_tong_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_tong_hor/ 50 0 ./params ./transfer_params_50_semi_P30_acc_tong_hor false false false
+rm -rf ./transfer_params_100_semi_P30_acc_tong_hor
+python train_transfer_cnnblstm_with_adabn.py ../dataset/all_transfer/P30_acc_tong_hor/ 100 0 ./params ./transfer_params_100_semi_P30_acc_tong_hor false false false
