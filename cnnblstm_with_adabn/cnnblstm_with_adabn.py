@@ -39,7 +39,7 @@ class cnnblstm_with_adabn(nn.Module):
 		self.n_layers = 1
 		self.bidirectional = True
 
-		self.ae = AutoEncoder.load_AE(type = "ConvAE", time_steps = self.time_steps, n_features = self.n_features, use_cuda = self.use_cuda, params_pkl = os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_AE))
+		# self.ae = AutoEncoder.load_AE(type = "ConvAE", time_steps = self.time_steps, n_features = self.n_features, use_cuda = self.use_cuda, params_pkl = os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_AE))
 
 		# build net1 cnn
 		self.net1 = nn.Sequential(
@@ -113,7 +113,7 @@ class cnnblstm_with_adabn(nn.Module):
 		net4_weights = ((name, param.data) for name, param in self.named_parameters() if (("weight" in name) and (("net4" in name) and ("net4_adabn" not in name))))
 		net4_biases = ((name, param.data) for name, param in self.named_parameters() if (("bias" in name) and (("net4" in name) and ("net4_adabn" not in name))))
 		# init weights & bias
-		self.ae.reset_parameters()
+		# self.ae.reset_parameters()
 		for name, params_data in net1_weights:
 			# print(name)
 			nn.init.xavier_uniform_(params_data)
@@ -211,9 +211,11 @@ class cnnblstm_with_adabn(nn.Module):
 			train_x = train_x.cuda()
 			train_y = train_y.cuda()
 
+		"""
 		# get autoencoder
 		self.ae = AutoEncoder.train_AE(self.ae, train_x, train_x, n_epoches = 20)
 		self.ae.save_params()
+		"""
  
 		# get train_data
 		train_data = torch.utils.data.TensorDataset(train_x, train_y)
@@ -317,7 +319,7 @@ class cnnblstm_with_adabn(nn.Module):
 		"""
 		self.save_adabn_variables()
 		torch.save(self.state_dict(), os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE))
-		self.ae.save_params()
+		# self.ae.save_params()
 		# print("save_params success!")
 
 	def save_adabn_variables(self):
@@ -339,7 +341,7 @@ class cnnblstm_with_adabn(nn.Module):
 			else:
 				self.load_state_dict(torch.load(os.path.join(self.params_dir, cnnblstm_with_adabn.PARAMS_FILE), map_location = torch.device('cpu')))
 			# print("load_params success!")
-		self.ae.load_params()
+		# self.ae.load_params()
 
 	def load_adabn_variables(self):
 		"""
