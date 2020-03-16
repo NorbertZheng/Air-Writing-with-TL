@@ -3,8 +3,13 @@
 /params
 /transfer_params
 /params_transferdataset
+/params_*
+/transfer_params_*
+/params_transfer_*
 
 # file
 *.pkl
 *.out
+*.swp
+*.bak
 
