@@ -1,5 +1,4 @@
 # dir
 /_dataset
-/dataset
-/__pycache__
+/pycache__
 
