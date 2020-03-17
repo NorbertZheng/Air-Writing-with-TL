@@ -1,9 +1,0 @@
-#!/bin/sh
-./train_6dmg_cnnblstm_with_adabn.sbatch
-./train_transfer_6dmg_sbatch/train_transfer_6dmg_C1.sbatch
-./train_transfer_6dmg_sbatch/train_transfer_6dmg_J1.sbatch
-./train_transfer_6dmg_sbatch/train_transfer_6dmg_M1.sbatch
-./train_transfer_6dmg_sbatch/train_transfer_6dmg_T1.sbatch
-./train_transfer_6dmg_sbatch/train_transfer_6dmg_Y1.sbatch
-./train_transfer_6dmg_sbatch/train_transfer_6dmg_Y2.sbatch
-
